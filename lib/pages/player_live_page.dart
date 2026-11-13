@@ -233,16 +233,16 @@ class _PlayerLivePageState extends State<PlayerLivePage> {
                 SizedBox(width: 10.sdp),
                 Expanded(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    T(S.now_playing, size: 10, color: C.primary),
-                    T('${_i + 1}. ${ch.name}', size: 13, lines: 1),
+                    T(S.now_playing, size: 10, color: C.primary, weight: FontWeight.bold),
+                    T('${_i + 1}. ${ch.name}', size: 13, lines: 1, weight: FontWeight.bold),
                   ]),
                 ),
                 if (_epg != null) ...[
                   SizedBox(width: 10.sdp),
                   Expanded(
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      T('${clockText(_epg!.start)} - ${clockText(_epg!.end)}', size: 10, color: C.primary),
-                      T(_epg!.title, size: 13, lines: 1),
+                      T('${clockText(_epg!.start)} - ${clockText(_epg!.end)}', size: 10, color: C.primary, weight: FontWeight.bold),
+                      T(_epg!.title, size: 13, lines: 1, weight: FontWeight.bold),
                     ]),
                   ),
                 ],

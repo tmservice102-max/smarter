@@ -166,7 +166,7 @@ class _DetailsSeriesPageState extends State<DetailsSeriesPage> {
                   padding: EdgeInsets.symmetric(horizontal: 15.sdp, vertical: 8.sdp),
                   decoration: BoxDecoration(
                       color: const Color(0x45000000), borderRadius: BorderRadius.circular(4.sdp)),
-                  child: T(S.err_no_episodes_found, size: 12, color: C.primary),
+                  child: T(S.err_no_episodes_found, size: 12, color: C.primary, weight: FontWeight.bold),
                 ),
               ),
             )

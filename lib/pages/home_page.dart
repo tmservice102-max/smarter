@@ -356,7 +356,7 @@ class BigTile extends StatelessWidget {
               child: Column(mainAxisSize: MainAxisSize.min, children: [
                 Ic(icon, size: iconSize.sdp),
                 SizedBox(height: 4.sdp),
-                T(title, size: titleSize, weight: FontWeight.w500),
+                T(title, size: titleSize, weight: FontWeight.bold),
               ]),
             ),
             // count badge
@@ -365,7 +365,7 @@ class BigTile extends StatelessWidget {
               right: 4.sdp,
               child: SaveBox(
                 padding: EdgeInsets.fromLTRB(4.sdp, 2.sdp, 4.sdp, 3.sdp),
-                child: T(shortCount(lib.count(type)), size: 8),
+                child: T(shortCount(lib.count(type)), size: 8, weight: FontWeight.bold),
               ),
             ),
             // last updated / download pill
@@ -446,7 +446,7 @@ class SmallTile extends StatelessWidget {
         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           Ic(icon, size: 18.sdp),
           SizedBox(width: 5.sdp),
-          Flexible(child: T(title, size: 10, lines: 1)),
+          Flexible(child: T(title, size: 10, lines: 1, weight: FontWeight.bold)),
         ]),
       ),
     );

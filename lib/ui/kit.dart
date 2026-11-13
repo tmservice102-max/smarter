@@ -21,8 +21,9 @@ extension Sdp on num {
 
 /// Colors copied from res/values/colors.xml and the theme drawables.
 class C {
-  static const primary = Color(0xFFFFCA28); // ns_dark_primary
-  static const primarySub = Color(0x26FFCA28);
+  // Default "Classic" theme of the Android app (ns_classic_primary).
+  static const primary = Color(0xFFE62E2F);
+  static const primarySub = Color(0x26E62E2F);
   static const title = Color(0xFFDBDBDB);
   static const titleSub = Color(0xE9A0A0A0);
   static const white = Colors.white;
@@ -303,7 +304,7 @@ class UiButton extends StatelessWidget {
         ),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           if (icon != null) ...[Ic(icon!, size: 14.sdp, color: Colors.black), SizedBox(width: 5.sdp)],
-          T(text, size: 10, color: Colors.black),
+          T(text, size: 10, color: Colors.black, weight: FontWeight.bold),
         ]),
       ),
     );

@@ -100,7 +100,7 @@ class PChip extends StatelessWidget {
           borderRadius: BorderRadius.circular(999),
           border: Border.all(color: const Color(0x55FFFFFF)),
         ),
-        child: T(text, size: 10),
+        child: T(text, size: 10, weight: FontWeight.bold),
       );
 }
 
@@ -169,7 +169,7 @@ class _LockOverlayState extends State<LockOverlay> {
               child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                 RoundBtn('ic_lock', size: 40, onTap: _show ? widget.onUnlock : null),
                 SizedBox(height: 10.sdp),
-                T(S.player_locked, size: 14),
+                T(S.player_locked, size: 14, weight: FontWeight.bold),
                 SizedBox(height: 4.sdp),
                 T(S.tap_to_unlock, size: 12),
               ]),
@@ -196,7 +196,7 @@ class TracksPanel extends StatelessWidget {
         margin: EdgeInsets.only(top: 10.sdp),
         padding: EdgeInsets.all(2.sdp),
         decoration: BoxDecoration(color: const Color(0x12FFFFFF), borderRadius: BorderRadius.circular(3.sdp)),
-        child: Row(children: [Ic(icon, size: 30.sdp, pad: 5.sdp), T(text, size: 13)]),
+        child: Row(children: [Ic(icon, size: 30.sdp, pad: 5.sdp), T(text, size: 13, weight: FontWeight.bold)]),
       );
 
   Widget _row(String text, bool sel, VoidCallback onTap) => Tap(
@@ -231,7 +231,7 @@ class TracksPanel extends StatelessWidget {
               Row(children: [
                 RoundBtn('ic_close', size: 30, pad: 5, onTap: onClose),
                 SizedBox(width: 8.sdp),
-                const T('Information', size: 15),
+                const T('Information', size: 15, weight: FontWeight.bold),
               ]),
               Container(height: 1.sdp, color: const Color(0x12FFFFFF), margin: EdgeInsets.only(top: 4.sdp)),
               Expanded(

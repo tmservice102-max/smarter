@@ -40,7 +40,7 @@ Future<bool> appDialog(
               Ic(icon, size: 35.sdp, pad: 5.sdp, color: C.title),
               Expanded(
                   child: Padding(
-                      padding: EdgeInsets.all(9.sdp), child: T(title, size: 13, color: C.title, lines: 1))),
+                      padding: EdgeInsets.all(9.sdp), child: T(title, size: 13, color: C.title, lines: 1, weight: FontWeight.bold))),
               IconTap('ic_close', size: 35, pad: 5, color: C.title, onTap: () => Navigator.pop(ctx, false)),
             ]),
             Padding(

@@ -236,7 +236,7 @@ class _VodPlayerPageState extends State<VodPlayerPage> {
             bottom: false,
             child: Row(children: [
               RoundBtn('ic_player_back', size: 30, pad: 5, onTap: () => Navigator.maybePop(context)),
-              Expanded(child: Padding(padding: EdgeInsets.all(10.sdp), child: T(_title, size: 12, lines: 1))),
+              Expanded(child: Padding(padding: EdgeInsets.all(10.sdp), child: T(_title, size: 12, lines: 1, weight: FontWeight.bold))),
               if (_isEpisodes)
                 PBtn('ic_playlist', pad: 2, onTap: () => setState(() {
                       _list = true;

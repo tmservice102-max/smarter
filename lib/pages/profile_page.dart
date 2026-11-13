@@ -45,7 +45,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                     Ic('ic_person_flat', size: 100.sdp, color: null),
                     SizedBox(height: 6.sdp),
-                    T(a?.name ?? '', size: 15, lines: 1),
+                    T(a?.name ?? '', size: 15, lines: 1, weight: FontWeight.bold),
                   ]),
                 ),
                 Expanded(
@@ -79,10 +79,10 @@ class _ProfilePageState extends State<ProfilePage> {
                                             width: 1.sdp),
                                       ),
                                       child: T(isActive ? 'Active' : status,
-                                          size: 7, color: isActive ? const Color(0xFF05B60D) : const Color(0xFFFF9800)),
+                                          size: 7, weight: FontWeight.bold, color: isActive ? const Color(0xFF05B60D) : const Color(0xFFFF9800)),
                                     ),
                                     SizedBox(width: 8.sdp),
-                                    Expanded(child: T(AppConfig.appName, size: 18, lines: 1)),
+                                    Expanded(child: T(AppConfig.appName, size: 18, lines: 1, weight: FontWeight.bold)),
                                   ]),
                                   const Spacer(),
                                   Row(crossAxisAlignment: CrossAxisAlignment.end, children: [

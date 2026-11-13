@@ -69,7 +69,7 @@ class InfoTable extends StatelessWidget {
           children: [
             for (final (k, v) in rows)
               TableRow(children: [
-                Padding(padding: EdgeInsets.only(bottom: 4.sdp), child: T(k, size: 10)),
+                Padding(padding: EdgeInsets.only(bottom: 4.sdp), child: T(k, size: 10, weight: FontWeight.bold)),
                 Padding(padding: EdgeInsets.only(bottom: 4.sdp), child: v),
               ]),
           ],

@@ -143,7 +143,7 @@ class _LoginRow extends StatelessWidget {
         ),
         child: Row(children: [
           Ic(o.icon, size: 36.sdp, pad: 6.sdp, color: Colors.black),
-          Expanded(child: T(o.title, size: 9, color: Colors.black, lines: 1)),
+          Expanded(child: T(o.title, size: 9, color: Colors.black, lines: 1, weight: FontWeight.bold)),
           Ic('ic_arrow_right', size: 30.sdp, pad: 8.sdp, color: Colors.black),
         ]),
       ),

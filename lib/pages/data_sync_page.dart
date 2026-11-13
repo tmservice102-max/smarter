@@ -57,7 +57,7 @@ class _DataSyncPageState extends State<DataSyncPage> {
         height: 14.sdp,
         decoration: BoxDecoration(shape: BoxShape.circle, color: on ? C.primary : C.primarySub));
     Widget line(bool on) => Expanded(flex: 2, child: Container(height: 4.sdp, color: on ? C.primary : C.primarySub));
-    Widget label(String t) => Expanded(flex: 10, child: T(t, size: 12, align: TextAlign.center));
+    Widget label(String t) => Expanded(flex: 10, child: T(t, size: 12, align: TextAlign.center, weight: FontWeight.bold));
     return PageBg(
       child: Padding(
         padding: EdgeInsets.all(5.sdp),
@@ -72,11 +72,11 @@ class _DataSyncPageState extends State<DataSyncPage> {
                   width: 54.sdp,
                   height: 54.sdp,
                   child: const CircularProgressIndicator(color: C.primary, strokeWidth: 4)),
-              T('$_percent%', size: 12),
+              T('$_percent%', size: 12, weight: FontWeight.bold),
             ]),
           ),
           SizedBox(height: 10.sdp),
-          T(S.sync_wait_message, size: 15, align: TextAlign.center),
+          T(S.sync_wait_message, size: 15, align: TextAlign.center, weight: FontWeight.bold),
           SizedBox(height: 8.sdp),
           T(_status, size: 11),
           SizedBox(height: 15.sdp),
