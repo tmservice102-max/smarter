@@ -11,6 +11,7 @@ workflows:
       app_store_connect: asc_key
     environment:
       flutter: stable
+      java: 21
       xcode: latest
       cocoapods: default
       ios_signing:
@@ -39,6 +40,7 @@ workflows:
     instance_type: mac_mini_m2
     environment:
       flutter: stable
+      java: 21
     scripts:
       - flutter pub get
       - flutter build apk --release
