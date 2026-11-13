@@ -161,6 +161,7 @@ class StreamItem {
         'r': rating,
         'e': epgId,
         'u': directUrl,
+        'a': hasArchive ? 1 : 0,
       };
   factory StreamItem.fromJson(Map<String, dynamic> j) => StreamItem(
         type: ContentType.values.firstWhere((t) => t.name == j['t'],
@@ -173,6 +174,7 @@ class StreamItem {
         rating: _s(j['r']),
         epgId: _s(j['e']),
         directUrl: _s(j['u']),
+        hasArchive: _b(j['a']),
       );
 }
 
@@ -233,7 +235,12 @@ class EpgEntry {
   final String description;
   final DateTime start;
   final DateTime end;
-  EpgEntry(this.title, this.description, this.start, this.end);
+  final String rawStart; // server time text, used for catch-up URLs
+  final bool hasArchive;
+  EpgEntry(this.title, this.description, this.start, this.end,
+      {this.rawStart = '', this.hasArchive = false});
+  bool get isPast => DateTime.now().isAfter(end);
+  int get minutes => end.difference(start).inMinutes;
   bool get isNow {
     final n = DateTime.now();
     return n.isAfter(start) && n.isBefore(end);

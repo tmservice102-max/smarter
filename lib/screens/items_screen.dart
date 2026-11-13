@@ -24,7 +24,7 @@ class ItemsScreen extends StatefulWidget {
   final ContentType type;
   final String title;
   final String? categoryId;
-  final String? special; // fav, recent
+  final String? special; // fav, recent, catchup
   const ItemsScreen(
       {super.key,
       required this.type,
@@ -42,6 +42,10 @@ class _ItemsScreenState extends State<ItemsScreen> {
   Future<List<StreamItem>> _load() async {
     if (widget.special == 'fav') return Store.favorites(widget.type);
     if (widget.special == 'recent') return Store.recent(widget.type);
+    if (widget.special == 'catchup') {
+      final all = await Session.src.streams(widget.type, categoryId: '');
+      return all.where((c) => c.hasArchive).toList();
+    }
     return Session.src.streams(widget.type, categoryId: widget.categoryId);
   }
 
@@ -106,7 +110,12 @@ class _ItemsScreenState extends State<ItemsScreen> {
               itemBuilder: (_, i) => _ChannelTile(
                 item: items[i],
                 onTap: () async {
-                  await openItem(context, items[i], list: items);
+                  if (widget.special == 'catchup') {
+                    await Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => EpgScreen(channel: items[i])));
+                  } else {
+                    await openItem(context, items[i], list: items);
+                  }
                   setState(() {});
                 },
                 onFav: () => _fav(items[i]),

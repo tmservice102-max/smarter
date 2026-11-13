@@ -117,6 +117,12 @@ class M3uSource implements ContentSource {
   Future<List<EpgEntry>> shortEpg(StreamItem channel) async => [];
 
   @override
+  Future<List<EpgEntry>> fullEpg(StreamItem channel) async => [];
+
+  @override
+  String catchupUrl(StreamItem channel, EpgEntry entry) => '';
+
+  @override
   String streamUrl(StreamItem item) => item.directUrl;
 
   @override

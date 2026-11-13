@@ -78,6 +78,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   tabs: tabs.map((t) => Tab(text: t.label)).toList())
               : null,
         ),
+        bottomNavigationBar: const SafeArea(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(16, 4, 16, 8),
+            child: Text(
+              'This app is a media player. It does not include any channels or content. '
+              'Use the login or playlist given to you by your own provider.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white54, fontSize: 12),
+            ),
+          ),
+        ),
         body: Stack(children: [
           TabBarView(
             children: tabs.map((t) {

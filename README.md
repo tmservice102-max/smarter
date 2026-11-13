@@ -12,9 +12,18 @@ New app written in Flutter. It uses the same admin panel (smartersapp.org).
 - TV guide per channel, account status and expiry, notifications from the panel,
   report a problem, privacy policy and terms, 24-hour time.
 
+- Catch-up TV (watch past programs on channels that support it) and a full
+  TV guide by day.
+- Downloads of movies and episodes for offline viewing (while the app is open).
+- App icon and launch screen.
+
 ## Not in this version yet
-Downloads, catch-up, multi-screen, the extra home themes, ads, push notifications,
-OpenVPN, Chromecast.
+Multi-screen, the extra home themes, ads, push notifications, OpenVPN, Chromecast.
+
+## Codemagic workflows
+- `ios-check`: builds the iPhone app without signing, to check it compiles.
+- `android-release`: builds an Android APK.
+- `ios-release`: signed iPhone build sent to TestFlight (needs the Apple account).
 
 ## Settings to check
 `lib/config.dart`: app name, panel URL, package name (must match "Package name"

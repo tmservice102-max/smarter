@@ -7,6 +7,7 @@ import '../session.dart';
 import '../store.dart';
 import '../widgets/common.dart';
 import 'accounts_screen.dart';
+import 'downloads_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -130,6 +131,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ),
       const SizedBox(height: 8),
+      ListTile(
+        leading: const Icon(Icons.download),
+        title: const Text('Downloads'),
+        onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const DownloadsScreen())),
+      ),
       ListTile(leading: const Icon(Icons.people), title: const Text('Switch user'), onTap: _switchUser),
       ListTile(leading: const Icon(Icons.logout), title: const Text('Log out'), onTap: _logout),
       const Divider(),

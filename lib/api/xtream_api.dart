@@ -190,10 +190,7 @@ class XtreamSource implements ContentSource {
     return SeriesInfo(_info(info, item.icon), seasons);
   }
 
-  @override
-  Future<List<EpgEntry>> shortEpg(StreamItem channel) async {
-    final j = await _get(
-        {'action': 'get_short_epg', 'stream_id': channel.id, 'limit': '10'});
+  List<EpgEntry> _parseEpg(dynamic j) {
     final list = (j is Map && j['epg_listings'] is List)
         ? j['epg_listings'] as List
         : [];
@@ -211,14 +208,42 @@ class XtreamSource implements ContentSource {
       return DateTime.tryParse(_s(fallback)) ?? DateTime.now();
     }
 
-    return list.whereType<Map>().map((m) {
+    final out = list.whereType<Map>().map((m) {
       return EpgEntry(
         dec(m['title']),
         dec(m['description']),
         ts(m['start_timestamp'], m['start']),
-        ts(m['stop_timestamp'], m['end']),
+        ts(m['stop_timestamp'], m['end'] ?? m['stop']),
+        rawStart: _s(m['start']),
+        hasArchive: _s(m['has_archive']) == '1',
       );
     }).toList();
+    out.sort((a, b) => a.start.compareTo(b.start));
+    return out;
+  }
+
+  @override
+  Future<List<EpgEntry>> shortEpg(StreamItem channel) async {
+    final j = await _get(
+        {'action': 'get_short_epg', 'stream_id': channel.id, 'limit': '10'});
+    return _parseEpg(j);
+  }
+
+  @override
+  Future<List<EpgEntry>> fullEpg(StreamItem channel) async {
+    final j = await _get(
+        {'action': 'get_simple_data_table', 'stream_id': channel.id});
+    return _parseEpg(j);
+  }
+
+  @override
+  String catchupUrl(StreamItem channel, EpgEntry entry) {
+    if (!channel.hasArchive || entry.rawStart.length < 16) return '';
+    // "2026-11-13 18:00:00" -> "2026-11-13:18-00"
+    final d = entry.rawStart.substring(0, 10);
+    final t = entry.rawStart.substring(11, 16).replaceAll(':', '-');
+    final mins = entry.minutes <= 0 ? 60 : entry.minutes;
+    return '${account.server}/timeshift/${account.username}/${account.password}/$mins/$d:$t/${channel.id}.ts';
   }
 
   @override

@@ -52,6 +52,9 @@ class _ContentTabState extends State<ContentTab>
                   () => _openItems('Favorites', special: 'fav')),
               _tile(Icons.history, 'Recently watched', '$recentCount',
                   () => _openItems('Recently watched', special: 'recent')),
+              if (widget.type == ContentType.live)
+                _tile(Icons.replay_circle_filled_outlined, 'Catch-up TV', null,
+                    () => _openItems('Catch-up TV', special: 'catchup')),
               const Divider(height: 24),
               if (visible.isEmpty)
                 const Padding(

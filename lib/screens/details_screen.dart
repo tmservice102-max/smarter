@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../downloads.dart';
 import '../models.dart';
 import '../session.dart';
 import '../store.dart';
@@ -18,6 +19,44 @@ class _DetailsScreenState extends State<DetailsScreen> {
   int _season = -1;
 
   bool get _isSeries => widget.item.type == ContentType.series;
+
+  bool get _canDownload =>
+      Session.app == null || Session.app!.flag('is_download');
+
+  Widget _dlButton(String id, String title, String url) {
+    return ListenableBuilder(
+      listenable: Downloads.instance,
+      builder: (context, _) {
+        final d = Downloads.instance.find(id);
+        if (d?.status == DlStatus.done) {
+          return const Icon(Icons.download_done, color: Colors.greenAccent);
+        }
+        if (d?.status == DlStatus.running || d?.status == DlStatus.queued) {
+          return SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(
+                strokeWidth: 3, value: d!.total > 0 ? d.progress : null),
+          );
+        }
+        return IconButton(
+          tooltip: 'Download',
+          icon: const Icon(Icons.download_outlined),
+          onPressed: () {
+            Downloads.instance.start(
+                id: id, title: title, icon: widget.item.icon, url: url);
+            toast(context, 'Download started. See Settings > Downloads.');
+          },
+        );
+      },
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    Downloads.instance.load();
+  }
 
   Future<SeriesInfo> _load() async {
     if (_isSeries) return Session.src.seriesInfo(widget.item);
@@ -117,6 +156,12 @@ class _DetailsScreenState extends State<DetailsScreen> {
                           label: Text(resume > 30 ? 'Resume' : 'Play'),
                         ),
                       ),
+                      if (_canDownload &&
+                          !Session.src.streamUrl(widget.item).contains('.m3u8')) ...[
+                        const SizedBox(width: 8),
+                        _dlButton(widget.item.key, widget.item.name,
+                            Session.src.streamUrl(widget.item)),
+                      ],
                       if (info.trailer.isNotEmpty) ...[
                         const SizedBox(width: 12),
                         OutlinedButton.icon(
@@ -180,6 +225,12 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   title: Text('${e.number}. ${e.title}',
                       maxLines: 2, overflow: TextOverflow.ellipsis),
                   subtitle: e.duration.isNotEmpty ? Text(e.duration) : null,
+                  trailing: _canDownload && Session.src.episodeUrl(e).isNotEmpty
+                      ? _dlButton(
+                          'episode:${e.id}',
+                          '${widget.item.name} S${e.season}E${e.number} ${e.title}',
+                          Session.src.episodeUrl(e))
+                      : null,
                   onTap: () => _playEpisode(eps, i),
                 );
               }),
