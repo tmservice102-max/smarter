@@ -1,103 +1,125 @@
+// Adult categories lock, like the Android app (DialogUtil.childCountDialog and
+// ParentalControlDialog). No password set = adult categories open freely.
 import 'package:material_ui/material_ui.dart';
-import 'package:flutter/services.dart';
 import 'store.dart';
+import 'ui/dialogs.dart';
+import 'ui/kit.dart';
+import 'ui/strings.dart';
 
-/// Parental lock: adult categories need a 4-digit PIN.
 class Parental {
-  static bool _unlocked = false;
-
-  static final _adult = RegExp(
-      r'(adult|xxx|porn|\+18|18\+|for adults|erotic|sex)',
-      caseSensitive: false);
-
-  static bool isAdult(String name) => _adult.hasMatch(name);
-
-  static bool get unlocked => _unlocked;
-  static void lock() => _unlocked = false;
-
-  /// Asks for the PIN (or to create one). Returns true if access is allowed.
-  static Future<bool> unlock(BuildContext context) async {
-    if (_unlocked) return true;
-    final hasPin = Store.parentalPin.isNotEmpty;
-    final pin = await _askPin(context,
-        title: hasPin ? 'Enter parental PIN' : 'Create a parental PIN',
-        hint: hasPin
-            ? 'This category is locked.'
-            : 'Choose 4 digits. You will need them to open adult categories.');
-    if (pin == null) return false;
-    if (!hasPin) {
-      Store.parentalPin = pin;
-      _unlocked = true;
-      return true;
-    }
-    if (pin == Store.parentalPin) {
-      _unlocked = true;
-      return true;
-    }
-    if (context.mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Wrong PIN')));
-    }
-    return false;
+  static const _words = ['18+', '+18', '[18+]', 'adults', 'adult', 'xxx', 'pron', 'sex'];
+  static bool isAdult(String name) {
+    final n = name.toLowerCase();
+    return _words.any(n.contains);
   }
 
-  /// Change the PIN from settings (asks for the old one first).
-  static Future<void> changePin(BuildContext context) async {
-    if (Store.parentalPin.isNotEmpty) {
-      final old = await _askPin(context,
-          title: 'Current PIN', hint: 'Enter your current PIN.');
-      if (old == null) return;
-      if (old != Store.parentalPin) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(const SnackBar(content: Text('Wrong PIN')));
-        }
-        return;
+  /// Returns true when the category can be opened.
+  static Future<bool> check(BuildContext context, String categoryName) async {
+    if (!isAdult(categoryName) || Store.parentalPin.isEmpty) return true;
+    final r = await _form(context,
+        title: S.warning_adults_only, fields: [S.error_password], submit: S.unlock, validate: (v) {
+      if (v[0].trim().isEmpty) return S.err_cannot_empty;
+      if (v[0] != Store.parentalPin) return S.err_password;
+      return null;
+    });
+    return r != null;
+  }
+
+  /// Settings > Parental control: set or change the password.
+  static Future<void> setup(BuildContext context) async {
+    final has = Store.parentalPin.isNotEmpty;
+    final r = await _form(context,
+        title: S.parental_control,
+        fields: [if (has) S.error_old_password, S.error_password, S.error_cpassword],
+        submit: S.submit, validate: (v) {
+      var i = 0;
+      if (has) {
+        final old = v[i++];
+        if (old.isEmpty) return S.err_cannot_empty;
+        if (old.endsWith(' ')) return S.error_pass_end_space;
+        if (old != Store.parentalPin) return S.error_old_pass_not_match;
       }
-    }
-    if (!context.mounted) return;
-    final pin = await _askPin(context,
-        title: 'New PIN', hint: 'Choose 4 digits.');
-    if (pin == null) return;
-    Store.parentalPin = pin;
-    _unlocked = false;
-    if (context.mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('PIN saved')));
-    }
+      final p = v[i++], c = v[i];
+      if (p.isEmpty || c.isEmpty) return S.err_cannot_empty;
+      if (p.endsWith(' ') || c.endsWith(' ')) return S.error_pass_end_space;
+      if (p != c) return S.error_pass_not_match;
+      return null;
+    });
+    if (r != null) Store.parentalPin = r.last;
   }
 
-  static Future<String?> _askPin(BuildContext context,
-      {required String title, required String hint}) {
-    final c = TextEditingController();
-    return showDialog<String>(
+  static Future<List<String>?> _form(BuildContext context,
+      {required String title,
+      required List<String> fields,
+      required String submit,
+      required String? Function(List<String>) validate}) {
+    final ctrls = [for (final _ in fields) TextEditingController()];
+    String? error;
+    return showDialog<List<String>>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(title),
-        content: Column(mainAxisSize: MainAxisSize.min, children: [
-          Text(hint),
-          const SizedBox(height: 12),
-          TextField(
-            controller: c,
-            autofocus: true,
-            obscureText: true,
-            keyboardType: TextInputType.number,
-            maxLength: 4,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 24, letterSpacing: 12),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, set) => Dialog(
+          backgroundColor: dialogBg,
+          insetPadding: EdgeInsets.all(25.sdp),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(3.sdp)),
+          child: SizedBox(
+            width: 280.sdp,
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(5.sdp),
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                Row(children: [
+                  Ic('ic_lock', size: 35.sdp, pad: 5.sdp),
+                  Expanded(child: Padding(padding: EdgeInsets.all(9.sdp), child: T(title, size: 13, color: C.title))),
+                  IconTap('ic_close', size: 35, pad: 5, onTap: () => Navigator.pop(ctx)),
+                ]),
+                for (var i = 0; i < fields.length; i++)
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(10.sdp, 5.sdp, 10.sdp, 0),
+                    child: TextField(
+                      controller: ctrls[i],
+                      obscureText: true,
+                      autofocus: i == 0,
+                      style: TextStyle(color: C.title, fontSize: 12.ssp),
+                      decoration: InputDecoration(
+                        hintText: fields[i],
+                        hintStyle: TextStyle(color: Colors.white38, fontSize: 12.ssp),
+                        filled: true,
+                        fillColor: const Color(0x12FFFFFF),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(2.sdp), borderSide: BorderSide.none),
+                        contentPadding: const EdgeInsets.all(12),
+                      ),
+                    ),
+                  ),
+                if (error != null)
+                  Padding(padding: EdgeInsets.only(top: 6.sdp), child: T(error!, size: 10, color: Colors.redAccent)),
+                Padding(
+                  padding: EdgeInsets.all(10.sdp),
+                  child: Row(children: [
+                    Expanded(child: GradButton(text: S.cancel, textSize: 13, onTap: () => Navigator.pop(ctx))),
+                    SizedBox(width: 6.sdp),
+                    Expanded(
+                      child: GradButton(
+                        text: submit,
+                        textSize: 13,
+                        gradient: G.primaryBtn,
+                        onTap: () {
+                          final v = [for (final c in ctrls) c.text];
+                          final e = validate(v);
+                          if (e != null) {
+                            set(() => error = e);
+                          } else {
+                            Navigator.pop(ctx, v);
+                          }
+                        },
+                      ),
+                    ),
+                  ]),
+                ),
+              ]),
+            ),
           ),
-        ]),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          FilledButton(
-            onPressed: () {
-              if (c.text.length == 4) Navigator.pop(ctx, c.text);
-            },
-            child: const Text('OK'),
-          ),
-        ],
+        ),
       ),
     );
   }

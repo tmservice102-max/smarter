@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../models.dart';
 import 'source.dart';
@@ -20,6 +21,12 @@ class M3uSource implements ContentSource {
 
   Future<List<StreamItem>> _load() async {
     if (_items != null) return _items!;
+    if (account.server.startsWith('file://') || account.server.startsWith('/')) {
+      final path = account.server.replaceFirst('file://', '');
+      final bytes = await File(path).readAsBytes();
+      _items = parse(utf8.decode(bytes, allowMalformed: true));
+      return _items!;
+    }
     final res = await http
         .get(Uri.parse(account.server))
         .timeout(const Duration(seconds: 90));

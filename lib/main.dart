@@ -1,12 +1,20 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 import 'config.dart';
 import 'store.dart';
-import 'screens/splash_screen.dart';
+import 'pages/launcher_page.dart';
+import 'ui/kit.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
+  // Like the Android app, every screen is landscape.
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ]);
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   await Store.init();
   runApp(const IptvApp());
 }
@@ -16,28 +24,21 @@ class IptvApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const accent = Color(0xFF1E88E5);
     return MaterialApp(
       title: AppConfig.appName,
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.dark,
       darkTheme: ThemeData(
         brightness: Brightness.dark,
-        colorScheme: ColorScheme.fromSeed(
-            seedColor: accent, brightness: Brightness.dark),
-        scaffoldBackgroundColor: const Color(0xFF0E1117),
-        cardColor: const Color(0xFF1A1F2B),
-        appBarTheme: const AppBarTheme(
-            backgroundColor: Color(0xFF0E1117), elevation: 0),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: const Color(0xFF1A1F2B),
-          border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none),
+        colorScheme: ColorScheme.fromSeed(seedColor: C.primary, brightness: Brightness.dark),
+        scaffoldBackgroundColor: C.bgBottom,
+        textSelectionTheme: const TextSelectionThemeData(
+          cursorColor: Colors.white,
+          selectionColor: Color(0x55FFCA28),
+          selectionHandleColor: C.primary,
         ),
       ),
-      home: const SplashScreen(),
+      home: const LauncherPage(),
     );
   }
 }

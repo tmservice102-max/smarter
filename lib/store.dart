@@ -6,6 +6,7 @@ import 'models.dart';
 class Store {
   static late SharedPreferences _p;
   static Future<void> init() async => _p = await SharedPreferences.getInstance();
+  static SharedPreferences get prefs => _p;
 
   // Accounts
   static List<Account> get accounts {
@@ -83,6 +84,23 @@ class Store {
 
   static Future<void> clearRecent() => _p.remove(_k('recent'));
 
+  /// Clears the watch history of one type; returns false if it was empty.
+  static Future<bool> clearRecentOf(ContentType t) async {
+    final list = _items('recent');
+    if (!list.any((x) => x.type == t)) return false;
+    await _setItems('recent', list.where((x) => x.type != t).toList());
+    return true;
+  }
+
+  /// Forgets saved positions whose key starts with [prefix] (movie:, episode:).
+  static Future<bool> clearResume(String prefix) async {
+    final keys = _p.getKeys().where((k) => k.startsWith('pos|$prefix')).toList();
+    for (final k in keys) {
+      await _p.remove(k);
+    }
+    return keys.isNotEmpty;
+  }
+
   // Resume position for movies/episodes (seconds)
   static int resumeAt(String key) => _p.getInt('pos|$key') ?? 0;
   static Future<void> setResume(String key, int seconds) =>
@@ -94,6 +112,23 @@ class Store {
 
   static bool get autoplayNext => _p.getBool('autoplayNext') ?? true;
   static set autoplayNext(bool v) => _p.setBool('autoplayNext', v);
+
+  /// Live stream format: 0 default, 1 MPEGTS (.ts), 2 HLS (.m3u8).
+  static int get streamFormat => _p.getInt('stream_format') ?? 0;
+  static set streamFormat(int v) => _p.setInt('stream_format', v);
+
+  /// Hours between automatic data updates (0 = off).
+  static int get autoUpdateHours => _p.getInt('auto_update') ?? 5;
+  static set autoUpdateHours(int v) => _p.setInt('auto_update', v);
+
+  static bool get showDownload => _p.getBool('ui_download') ?? true;
+  static set showDownload(bool v) => _p.setBool('ui_download', v);
+
+  static bool get showCardTitle => _p.getBool('ui_card_title') ?? true;
+  static set showCardTitle(bool v) => _p.setBool('ui_card_title', v);
+
+  static bool get hardwareDecoding => _p.getBool('hw_decoding') ?? true;
+  static set hardwareDecoding(bool v) => _p.setBool('hw_decoding', v);
 
   static String get parentalPin => _p.getString('pin') ?? '';
   static set parentalPin(String v) => _p.setString('pin', v);

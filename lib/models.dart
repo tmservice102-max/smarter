@@ -33,6 +33,58 @@ class AppDetails {
   bool get xuiDnsOnly => flag('is_xui_dns');
   String get tmdbKey => get('tmdb_key');
 
+  // Same switches the Android app reads in LoadAbout.
+  bool get selectXui => flag('is_select_xui');
+  bool get selectStream => flag('is_select_stream');
+  bool get selectPlaylist => flag('is_select_playlist');
+  bool get selectDevice => flag('is_select_device_id');
+  bool get selectActivation => flag('is_select_activation_code');
+  bool get selectSingle => flag('is_select_single');
+  bool get xuiDnsEnabled => flag('is_xui_dns');
+  bool get streamDnsEnabled => flag('is_stream_dns');
+  bool get trial => flag('is_trial_xui');
+  bool get download => flag('is_download');
+  bool get radio => flag('is_xui_radio');
+  int get theme => int.tryParse(get('is_theme')) ?? 0;
+  int get epgTheme => int.tryParse(get('is_epg')) ?? 2;
+  String get email => get('app_email');
+  String get author => get('app_author');
+  String get contact => get('app_contact');
+  String get website => get('app_website');
+  String get description => get('app_description');
+  String get developedBy => get('app_developed_by');
+
+  /// Extra buttons on the login chooser (WhatsApp, Telegram, links).
+  List<Map<String, String>> get selectPages => (raw['select_data'] is List ? raw['select_data'] as List : [])
+      .whereType<Map>()
+      .map((m) => {
+            'title': _s(m['title']),
+            'type': _s(m['redirect_type']),
+            'url': _s(m['page_data']),
+          })
+      .toList();
+
+  /// Popup ad shown once on the home screen.
+  Map<String, String>? get popupAd {
+    final l = raw['popup_ads'];
+    if (l is List && l.isNotEmpty && l.first is Map) {
+      final m = l.first as Map;
+      return {
+        'title': _s(m['ads_title']),
+        'image': _s(m['ads_image']),
+        'type': _s(m['ads_redirect_type']),
+        'url': _s(m['ads_redirect_url']),
+      };
+    }
+    return null;
+  }
+
+  List<String> get blockedDns => (raw['xui_dns_block'] is List ? raw['xui_dns_block'] as List : [])
+      .whereType<Map>()
+      .map((m) => _s(m['dns_base']).toLowerCase())
+      .where((e) => e.isNotEmpty)
+      .toList();
+
   factory AppDetails.fromJson(Map<String, dynamic> j) {
     List<Dns> dns(String k) => (j[k] is List ? j[k] as List : [])
         .whereType<Map>()
@@ -76,15 +128,20 @@ class Account {
   final String server; // xtream base url, or m3u url
   final String username;
   final String password;
+  /// How the user logged in, like the Android app: xui (Xtream Codes),
+  /// stream (1-Stream), playlist (M3U).
+  final String kind;
 
-  Account._(this.type, this.name, this.server, this.username, this.password);
+  Account._(this.type, this.name, this.server, this.username, this.password, [String? kind])
+      : kind = kind ?? (type == AccountType.playlist ? 'playlist' : 'xui');
   factory Account.xtream(
           {required String name,
           required String server,
           required String username,
-          required String password}) =>
+          required String password,
+          String kind = 'xui'}) =>
       Account._(AccountType.xtream, name, normalizeServer(server), username,
-          password);
+          password, kind);
   factory Account.playlist({required String name, required String url}) =>
       Account._(AccountType.playlist, name, url.trim(), '', '');
 
@@ -96,13 +153,15 @@ class Account {
         'server': server,
         'username': username,
         'password': password,
+        'kind': kind,
       };
   factory Account.fromJson(Map<String, dynamic> j) => Account._(
       j['type'] == 'playlist' ? AccountType.playlist : AccountType.xtream,
       _s(j['name']),
       _s(j['server']),
       _s(j['username']),
-      _s(j['password']));
+      _s(j['password']),
+      j['kind'] == null ? null : _s(j['kind']));
 
   static String normalizeServer(String s) {
     var v = s.trim();
@@ -135,6 +194,8 @@ class StreamItem {
   final String epgId;
   final String directUrl; // for M3U entries
   final bool hasArchive;
+  /// When it was added on the server (unix seconds), for "Recently added".
+  final int added;
 
   StreamItem({
     required this.type,
@@ -147,6 +208,7 @@ class StreamItem {
     this.epgId = '',
     this.directUrl = '',
     this.hasArchive = false,
+    this.added = 0,
   });
 
   String get key => '${type.name}:$id';
@@ -162,6 +224,7 @@ class StreamItem {
         'e': epgId,
         'u': directUrl,
         'a': hasArchive ? 1 : 0,
+        if (added != 0) 'd': added,
       };
   factory StreamItem.fromJson(Map<String, dynamic> j) => StreamItem(
         type: ContentType.values.firstWhere((t) => t.name == j['t'],
@@ -175,6 +238,7 @@ class StreamItem {
         epgId: _s(j['e']),
         directUrl: _s(j['u']),
         hasArchive: _b(j['a']),
+        added: int.tryParse(_s(j['d'])) ?? 0,
       );
 }
 
@@ -212,6 +276,7 @@ class Episode {
   final String plot;
   final String image;
   final String duration;
+  final String rating;
   Episode({
     required this.id,
     required this.title,
@@ -221,6 +286,7 @@ class Episode {
     this.plot = '',
     this.image = '',
     this.duration = '',
+    this.rating = '',
   });
 }
 

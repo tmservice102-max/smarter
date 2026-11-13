@@ -2,7 +2,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:iptv_smarter/api/m3u_source.dart';
 import 'package:iptv_smarter/main.dart';
 import 'package:iptv_smarter/models.dart';
-import 'package:iptv_smarter/screens/login_screen.dart';
+import 'package:iptv_smarter/library.dart';
+import 'package:iptv_smarter/pages/details_kit.dart';
+import 'package:iptv_smarter/pages/select_player_page.dart';
+import 'package:iptv_smarter/parental.dart';
 import 'package:iptv_smarter/store.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -27,14 +30,28 @@ http://s/movie/u/p/2.mkv
     expect(Account.normalizeServer('host.com:8080/'), 'http://host.com:8080');
   });
 
-  testWidgets('login screen shows Xtream and M3U when panel is offline',
-      (tester) async {
+  testWidgets('login chooser shows Xtream, M3U and list users when panel is offline', (tester) async {
     SharedPreferences.setMockInitialValues({});
     await Store.init();
-    await tester.pumpWidget(const MaterialApp(home: LoginScreen()));
-    expect(find.text('Xtream Codes'), findsOneWidget);
-    expect(find.text('M3U Playlist'), findsOneWidget);
-    expect(find.text('Username'), findsOneWidget);
+    // Landscape phone, like the Android app.
+    tester.view.physicalSize = const Size(2532, 1170);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(const MaterialApp(home: SelectPlayerPage()));
+    await tester.pump();
+    expect(find.text('XTREAM CODES'), findsOneWidget);
+    expect(find.text('M3U PLAYLIST'), findsOneWidget);
+    expect(find.text('LIST USERS'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  test('helpers match the Android formatting', () {
+    expect(shortCount(950), '950');
+    expect(shortCount(12345), '12.3K');
+    expect(durationText('01:45:00'), '1h 45m');
+    expect(durationText('95'), '1h 35m');
+    expect(Parental.isAdult('Adults 18+'), isTrue);
+    expect(Parental.isAdult('Sports'), isFalse);
   });
 
   test('app widget builds', () {

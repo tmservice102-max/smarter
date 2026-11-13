@@ -1,7 +1,8 @@
 /// App-wide settings. Change these to rebrand the app.
 class AppConfig {
   /// Name shown in the app.
-  static const appName = 'IPTV Smarter Pro';
+  static const appName = 'IPTV SMARTER PRO';
+  static const version = '1.1.0';
 
   /// Your admin panel (the PHP backend). No trailing slash.
   static const panelUrl = 'https://smartersapp.org';

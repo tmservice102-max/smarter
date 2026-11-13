@@ -5,7 +5,7 @@ import '../models.dart';
 
 /// Talks to the PHP admin panel (POST /api with a base64 "data" field).
 class PanelApi {
-  static Future<dynamic> _call(Map<String, dynamic> body) async {
+  static Future<dynamic> _call(Map<String, dynamic> body, {bool check = true}) async {
     final payload = {'application_id': AppConfig.applicationId, ...body};
     final data = base64.encode(
         utf8.encode(Uri.encodeComponent(jsonEncode(payload))));
@@ -17,7 +17,7 @@ class PanelApi {
     }
     final json = jsonDecode(res.body);
     final out = json[AppConfig.apiHeader];
-    if (out is List && out.isNotEmpty && out.first is Map) {
+    if (check && out is List && out.isNotEmpty && out.first is Map) {
       final first = out.first as Map;
       if (first['success'] == '0' || first['success'] == '-1') {
         throw Exception(first['MSG'] ?? 'Panel error');
@@ -53,6 +53,31 @@ class PanelApi {
         .where((m) => m.containsKey('user_name'))
         .map((m) => PanelUser.fromJson(Map<String, dynamic>.from(m)))
         .toList();
+  }
+
+  /// Trial status for this device: (success, message). success 1 = has a
+  /// trial to log in to, 2 = can create one, other = not allowed.
+  static Future<(String, String)> getTrial(String deviceId) async {
+    final out = await _call({'helper_name': 'get_trial', 'device_id': deviceId}, check: false);
+    if (out is List && out.isNotEmpty && out.first is Map) {
+      final m = out.first as Map;
+      return ('${m['success'] ?? ''}', '${m['MSG'] ?? ''}');
+    }
+    return ('0', '');
+  }
+
+  /// Creates (or returns) the trial login for this device.
+  static Future<PanelUser?> addTrial(String deviceId) async {
+    final out = await _call({'helper_name': 'add_trial', 'device_id': deviceId}, check: false);
+    if (out is List) {
+      for (final m in out.whereType<Map>()) {
+        if (m.containsKey('user_type')) {
+          return PanelUser(
+              '${m['user_type']}', '${m['user_name']}', '${m['user_password']}', '${m['dns_base']}');
+        }
+      }
+    }
+    return null;
   }
 
   static Future<void> report(

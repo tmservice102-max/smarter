@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config.dart';
 import '../models.dart';
+import '../store.dart';
 import 'source.dart';
 
 String _s(dynamic v) => v == null ? '' : v.toString();
@@ -98,7 +99,10 @@ class XtreamSource implements ContentSource {
             icon: _s(m['stream_icon']),
             categoryId: _s(m['category_id']),
             epgId: _s(m['epg_channel_id']),
+            // Radio stations come inside the live list (stream_type radio_streams).
+            extension: _s(m['stream_type']) == 'radio_streams' ? 'radio' : '',
             hasArchive: _s(m['tv_archive']) == '1',
+            added: int.tryParse(_s(m['added'])) ?? 0,
           );
         case ContentType.movie:
           return StreamItem(
@@ -109,6 +113,7 @@ class XtreamSource implements ContentSource {
             categoryId: _s(m['category_id']),
             extension: _s(m['container_extension']),
             rating: _s(m['rating']),
+            added: int.tryParse(_s(m['added'])) ?? 0,
           );
         case ContentType.series:
           return StreamItem(
@@ -118,6 +123,7 @@ class XtreamSource implements ContentSource {
             icon: _s(m['cover']),
             categoryId: _s(m['category_id']),
             rating: _s(m['rating']),
+            added: int.tryParse(_s(m['last_modified'])) ?? 0,
           );
       }
     }).toList();
@@ -172,6 +178,7 @@ class XtreamSource implements ContentSource {
             plot: _s(inf['plot']),
             image: _s(inf['movie_image']),
             duration: _s(inf['duration']),
+            rating: _s(inf['rating']),
           ));
     }
 
@@ -253,7 +260,9 @@ class XtreamSource implements ContentSource {
     final p = account.password;
     switch (item.type) {
       case ContentType.live:
-        return '$base/live/$u/$p/${item.id}.m3u8';
+        // Stream Format setting: MPEGTS (.ts) or HLS (.m3u8, default).
+        final ext = Store.streamFormat == 1 ? 'ts' : 'm3u8';
+        return '$base/live/$u/$p/${item.id}.$ext';
       case ContentType.movie:
         final ext = item.extension.isEmpty ? 'mp4' : item.extension;
         return '$base/movie/$u/$p/${item.id}.$ext';
