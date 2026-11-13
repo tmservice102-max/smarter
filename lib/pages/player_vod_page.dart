@@ -8,7 +8,9 @@ import 'package:media_kit_video/media_kit_video.dart';
 import '../models.dart';
 import '../session.dart';
 import '../store.dart';
+import '../ui/dialogs.dart';
 import '../ui/kit.dart';
+import '../ui/strings.dart';
 import 'player_kit.dart';
 
 class VodPlayerPage extends StatefulWidget {
@@ -219,7 +221,8 @@ class _VodPlayerPageState extends State<VodPlayerPage> {
                       children: [
                         SeekBtn(seconds: 5, forward: false, onTap: () => _seekBy(-5)),
                         SizedBox(width: 30.sdp),
-                        RoundBtn(
+                        // ExoPlayer's play / pause has no circle behind it.
+                        PBtn(
                           _playing ? 'ic_pause' : 'ic_play',
                           size: 42,
                           pad: 6,
@@ -261,19 +264,23 @@ class _VodPlayerPageState extends State<VodPlayerPage> {
         top: 0,
         child: Container(
           decoration: topShade,
-          padding: EdgeInsets.fromLTRB(6.sdp, 6.sdp, 8.sdp, 18.sdp),
+          padding: EdgeInsets.fromLTRB(15.sdp, 10.sdp, 15.sdp, 10.sdp),
           child: SafeArea(
             bottom: false,
             child: Row(
               children: [
+                SizedBox(width: 6.sdp),
                 RoundBtn('ic_player_back', size: 30, pad: 5, onTap: () => Navigator.maybePop(context)),
+                SizedBox(width: 6.sdp),
                 Expanded(
                   child: Padding(
                     padding: EdgeInsets.all(10.sdp),
                     child: T(_title, size: 12, lines: 1, weight: FontWeight.bold),
                   ),
                 ),
-                if (_isEpisodes)
+                const BatteryIcon(),
+                _gap,
+                if (_isEpisodes) ...[
                   PBtn(
                     'ic_playlist',
                     pad: 2,
@@ -282,6 +289,8 @@ class _VodPlayerPageState extends State<VodPlayerPage> {
                       _controls = false;
                     }),
                   ),
+                  _gap,
+                ],
                 PBtn(
                   'ic_crop',
                   onTap: () {
@@ -290,6 +299,7 @@ class _VodPlayerPageState extends State<VodPlayerPage> {
                     _autoHide();
                   },
                 ),
+                _gap,
                 PBtn(
                   'ic_information',
                   pad: 4,
@@ -298,6 +308,7 @@ class _VodPlayerPageState extends State<VodPlayerPage> {
                     _controls = false;
                   }),
                 ),
+                _gap,
                 PBtn(
                   'ic_unlock',
                   onTap: () => setState(() {
@@ -305,7 +316,9 @@ class _VodPlayerPageState extends State<VodPlayerPage> {
                     _controls = false;
                   }),
                 ),
+                _gap,
                 PBtn('ic_close', pad: 3, onTap: () => setState(() => _controls = false)),
+                SizedBox(width: 6.sdp),
               ],
             ),
           ),
@@ -345,40 +358,50 @@ class _VodPlayerPageState extends State<VodPlayerPage> {
                       ),
                     ),
                   ),
+                // DefaultTimeBar: red played part, dark rest, white dot.
+                SliderTheme(
+                  data: SliderThemeData(
+                    trackHeight: 3.sdp,
+                    activeTrackColor: C.primary,
+                    inactiveTrackColor: const Color(0x99262626),
+                    thumbColor: Colors.white,
+                    overlayShape: SliderComponentShape.noOverlay,
+                    thumbShape: RoundSliderThumbShape(enabledThumbRadius: 5.sdp),
+                    trackShape: const RectangularSliderTrackShape(),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 6.sdp),
+                    child: Slider(
+                      value: val,
+                      max: max <= 0 ? 1 : max,
+                      onChanged: max <= 0
+                          ? null
+                          : (v) {
+                              setState(() => _drag = v);
+                              _hide?.cancel();
+                            },
+                      onChangeEnd: (v) {
+                        _player.seek(Duration(milliseconds: v.toInt()));
+                        setState(() => _drag = null);
+                        _autoHide();
+                      },
+                    ),
+                  ),
+                ),
+                // Time on the left, subtitles and settings on the right.
                 Row(
                   children: [
-                    T(durText(Duration(milliseconds: val.toInt())), size: 10),
-                    Expanded(
-                      child: SliderTheme(
-                        data: SliderThemeData(
-                          trackHeight: 2.sdp,
-                          activeTrackColor: C.primary,
-                          inactiveTrackColor: const Color(0x55FFFFFF),
-                          thumbColor: C.primary,
-                          overlayShape: SliderComponentShape.noOverlay,
-                          thumbShape: RoundSliderThumbShape(enabledThumbRadius: 6.sdp),
-                        ),
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 10.sdp, vertical: 8.sdp),
-                          child: Slider(
-                            value: val,
-                            max: max <= 0 ? 1 : max,
-                            onChanged: max <= 0
-                                ? null
-                                : (v) {
-                                    setState(() => _drag = v);
-                                    _hide?.cancel();
-                                  },
-                            onChangeEnd: (v) {
-                              _player.seek(Duration(milliseconds: v.toInt()));
-                              setState(() => _drag = null);
-                              _autoHide();
-                            },
-                          ),
-                        ),
-                      ),
+                    T('${durText(Duration(milliseconds: val.toInt()))}  ·  ${durText(_dur)}', size: 10),
+                    const Spacer(),
+                    PBtn(
+                      'ic_closed_captioning',
+                      onTap: () => setState(() {
+                        _info = true;
+                        _controls = false;
+                      }),
                     ),
-                    T(durText(_dur), size: 10),
+                    _gap,
+                    PBtn('ic_setting', onTap: _settings),
                   ],
                 ),
               ],
@@ -387,6 +410,37 @@ class _VodPlayerPageState extends State<VodPlayerPage> {
         ),
       ),
     ];
+  }
+
+  Widget get _gap => SizedBox(width: 7.sdp);
+
+  /// The ExoPlayer settings menu: playback speed and audio track.
+  Future<void> _settings() async {
+    _hide?.cancel();
+    final what = await choiceDialog(
+      context,
+      title: S.settings,
+      options: const ['Playback speed', 'Audio track'],
+      selected: -1,
+    );
+    if (!mounted) return;
+    if (what == 0) {
+      const speeds = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
+      final cur = speeds.indexOf(_player.state.rate);
+      final r = await choiceDialog(
+        context,
+        title: 'Playback speed',
+        options: [for (final v in speeds) v == 1.0 ? 'Normal' : '${v}x'],
+        selected: cur < 0 ? 3 : cur,
+      );
+      if (r != null) await _player.setRate(speeds[r]);
+    } else if (what == 1) {
+      setState(() {
+        _info = true;
+        _controls = false;
+      });
+    }
+    _autoHide();
   }
 
   /// row_player_epi list on the left.

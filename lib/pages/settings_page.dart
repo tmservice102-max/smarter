@@ -38,7 +38,7 @@ class SettingsPage extends StatelessWidget {
     final items = <(String, String, VoidCallback)>[
       (S.general_setting, 'ic_player_setting', () => go(context, const _GeneralPage())),
       (S.ui, 'ic_pencil_ruler', () => go(context, const _UiPage())),
-      if (xtream) (S.stream_format, 'ic_file_settings', () => go(context, const _FormatPage())),
+      if (xtream) (S.stream_format, 'ic_file_settings', () => go(context, const StreamFormatPage())),
       (S.multiple_screen, 'ic_grid_view', () => go(context, const _MultiScreenSetting())),
       (S.clear_data, 'ic_clean_code', () => go(context, const _ClearDataPage())),
       if (xtream) (S.automation, 'ic_engineering', () => go(context, const _AutomationPage())),
@@ -318,8 +318,8 @@ class _TimeFormatPage extends StatelessWidget {
   );
 }
 
-class _FormatPage extends StatelessWidget {
-  const _FormatPage();
+class StreamFormatPage extends StatelessWidget {
+  const StreamFormatPage({super.key});
   @override
   Widget build(BuildContext context) => _ChoicePage(
     title: S.stream_format,

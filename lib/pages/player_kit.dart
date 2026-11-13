@@ -111,16 +111,17 @@ class SeekBtn extends StatelessWidget {
 class PChip extends StatelessWidget {
   final String text;
   final Color? color;
-  const PChip(this.text, {super.key, this.color});
+  final bool bold;
+  const PChip(this.text, {super.key, this.color, this.bold = true});
   @override
   Widget build(BuildContext context) => Container(
-    padding: EdgeInsets.symmetric(horizontal: 7.sdp, vertical: 2.sdp),
+    padding: EdgeInsets.symmetric(horizontal: 8.sdp, vertical: 2.sdp),
     decoration: BoxDecoration(
       color: color ?? const Color(0x33FFFFFF),
       borderRadius: BorderRadius.circular(999),
       border: Border.all(color: const Color(0x55FFFFFF)),
     ),
-    child: T(text, size: 10, weight: FontWeight.bold),
+    child: T(text, size: 10, weight: bold ? FontWeight.bold : null),
   );
 }
 
@@ -336,4 +337,65 @@ String durText(Duration d) {
   final h = d.inHours, m = d.inMinutes % 60, s = d.inSeconds % 60;
   String two(int v) => v.toString().padLeft(2, '0');
   return h > 0 ? '$h:${two(m)}:${two(s)}' : '${two(m)}:${two(s)}';
+}
+
+/// exo_battery_info: battery icon from the phone's level (getBatteryDrawable),
+/// hidden where the level is unknown (simulators).
+class BatteryIcon extends StatefulWidget {
+  const BatteryIcon({super.key});
+  @override
+  State<BatteryIcon> createState() => _BatteryIconState();
+}
+
+class _BatteryIconState extends State<BatteryIcon> {
+  static const _ch = MethodChannel('app/battery');
+  int _level = -1;
+  bool _charging = false;
+  Timer? _t;
+
+  @override
+  void initState() {
+    super.initState();
+    _read();
+    _t = Timer.periodic(const Duration(seconds: 30), (_) => _read());
+  }
+
+  @override
+  void dispose() {
+    _t?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _read() async {
+    try {
+      final r = await _ch.invokeMapMethod<String, dynamic>('battery');
+      if (!mounted || r == null) return;
+      setState(() {
+        _level = (r['level'] as num?)?.toInt() ?? -1;
+        _charging = r['charging'] == true;
+      });
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = _charging
+        ? 'ic_battery_charging'
+        : _level < 10
+        ? 'ic_battery_disable'
+        : _level < 20
+        ? 'ic_battery_empty'
+        : _level < 30
+        ? 'ic_battery_one'
+        : _level < 50
+        ? 'ic_battery_two'
+        : 'ic_battery_full';
+    return Visibility(
+      visible: _level >= 0,
+      maintainSize: true,
+      maintainAnimation: true,
+      maintainState: true,
+      child: Ic(icon, size: 30.sdp, pad: 3.sdp),
+    );
+  }
 }

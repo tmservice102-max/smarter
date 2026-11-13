@@ -11,6 +11,7 @@ import '../store.dart';
 import '../ui/kit.dart';
 import '../ui/strings.dart';
 import 'multi_screen_page.dart';
+import 'settings_page.dart';
 import 'player_kit.dart';
 
 class PlayerLivePage extends StatefulWidget {
@@ -125,7 +126,7 @@ class _PlayerLivePageState extends State<PlayerLivePage> {
     if (widget.channels.isEmpty) {
       return Scaffold(backgroundColor: Colors.black, body: Empty(S.err_no_data_found));
     }
-    final listW = 190.sdp;
+    final listW = 234.sdp;
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -195,19 +196,35 @@ class _PlayerLivePageState extends State<PlayerLivePage> {
         top: 0,
         child: Container(
           decoration: topShade,
-          padding: EdgeInsets.fromLTRB(8.sdp, 6.sdp, 8.sdp, 20.sdp),
+          padding: EdgeInsets.fromLTRB(15.sdp, 10.sdp, 15.sdp, 8.sdp),
           child: SafeArea(
             bottom: false,
             child: Row(
               children: [
                 RoundBtn('ic_player_back', size: 34, onTap: () => Navigator.maybePop(context)),
                 SizedBox(width: 10.sdp),
-                PChip(S.live_tv_home),
-                SizedBox(width: 5.sdp),
-                PChip(resolutionText(_player.state.height)),
-                SizedBox(width: 5.sdp),
-                PChip(clockText(DateTime.now())),
+                // LIVE TV and resolution chips, the clock below them.
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(vertical: 2.sdp),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          PChip(S.live_tv_home.toUpperCase()),
+                          SizedBox(width: 5.sdp),
+                          PChip(resolutionText(_player.state.height), bold: false),
+                        ],
+                      ),
+                    ),
+                    PChip(clockText(DateTime.now()), bold: false),
+                  ],
+                ),
                 const Spacer(),
+                const BatteryIcon(),
+                _gap,
                 PBtn(
                   fav ? 'ic_favorite' : 'ic_favorite_border',
                   pad: 4,
@@ -218,10 +235,22 @@ class _PlayerLivePageState extends State<PlayerLivePage> {
                     setState(() {});
                   },
                 ),
-                if (tr.subtitle.length > 2) PBtn('ic_closed_captioning', onTap: _openInfo),
-                if (tr.video.length > 3) PBtn('ic_hd', onTap: _openInfo),
-                if (tr.audio.length > 3) PBtn('ic_audiotrack', onTap: _openInfo),
+                if (tr.subtitle.length > 2) ...[_gap, PBtn('ic_closed_captioning', onTap: _openInfo)],
+                if (tr.video.length > 3) ...[_gap, PBtn('ic_hd', onTap: _openInfo)],
+                if (tr.audio.length > 3) ...[_gap, PBtn('ic_audiotrack', onTap: _openInfo)],
+                if (Store.currentAccount?.type == AccountType.xtream) ...[
+                  _gap,
+                  PBtn(
+                    'ic_file_settings',
+                    onTap: () async {
+                      await go(context, const StreamFormatPage());
+                      if (mounted) _play(_i);
+                    },
+                  ),
+                ],
+                _gap,
                 PBtn('ic_information', pad: 4, onTap: _openInfo),
+                _gap,
                 PBtn(
                   'ic_unlock',
                   onTap: () => setState(() {
@@ -229,6 +258,7 @@ class _PlayerLivePageState extends State<PlayerLivePage> {
                     _controls = false;
                   }),
                 ),
+                _gap,
                 PBtn('ic_close', pad: 4, onTap: () => setState(() => _controls = false)),
               ],
             ),
@@ -242,7 +272,7 @@ class _PlayerLivePageState extends State<PlayerLivePage> {
         bottom: 0,
         child: Container(
           decoration: bottomShade,
-          padding: EdgeInsets.fromLTRB(12.sdp, 25.sdp, 12.sdp, 10.sdp),
+          padding: EdgeInsets.fromLTRB(15.sdp, 25.sdp, 15.sdp, 10.sdp),
           child: SafeArea(
             top: false,
             child: Column(
@@ -264,8 +294,8 @@ class _PlayerLivePageState extends State<PlayerLivePage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          T(S.now_playing, size: 10, color: C.primary, weight: FontWeight.bold),
-                          T('${_i + 1}. ${ch.name}', size: 13, lines: 1, weight: FontWeight.bold),
+                          T(S.now_playing.toUpperCase(), size: 10, color: C.primary, weight: FontWeight.bold),
+                          T(ch.name, size: 13, lines: 1, weight: FontWeight.bold),
                         ],
                       ),
                     ),
@@ -297,7 +327,7 @@ class _PlayerLivePageState extends State<PlayerLivePage> {
                     ),
                   ],
                 ),
-                SizedBox(height: 10.sdp),
+                SizedBox(height: 12.sdp),
                 Row(
                   children: [
                     _action(
@@ -311,8 +341,9 @@ class _PlayerLivePageState extends State<PlayerLivePage> {
                     _action('ic_multiple_screen', S.multiple_screen, () {
                       go(context, MultiScreenPage(first: ch), replace: true);
                     }),
-                    _action('ic_crop', '${S.aspect_ratio} (${fitLabel(playerFits[_fit])})', () {
+                    _action('ic_crop', S.aspect_ratio, () {
                       setState(() => _fit = (_fit + 1) % playerFits.length);
+                      toast(context, fitLabel(playerFits[_fit]));
                       _autoHide();
                     }),
                   ],
@@ -324,6 +355,8 @@ class _PlayerLivePageState extends State<PlayerLivePage> {
       ),
     ];
   }
+
+  Widget get _gap => SizedBox(width: 7.sdp);
 
   void _openInfo() => setState(() {
     _info = true;
@@ -348,24 +381,23 @@ class _PlayerLivePageState extends State<PlayerLivePage> {
     ),
   );
 
-  /// row_player_live list on the left.
+  /// row_player_live list on the left: number and name, then the logo in
+  /// a thin bordered box.
   Widget _channelList() {
     return Container(
       color: Colors.black,
       child: SafeArea(
         right: false,
         child: ListView.builder(
-          controller: ScrollController(initialScrollOffset: (_i * 70.sdp - 100.sdp).clamp(0, double.infinity)),
-          padding: EdgeInsets.all(5.sdp),
+          controller: ScrollController(initialScrollOffset: (_i * 75.sdp - 100.sdp).clamp(0, double.infinity)),
+          padding: EdgeInsets.fromLTRB(15.sdp, 10.sdp, 30.sdp, 10.sdp),
           itemCount: widget.channels.length,
           itemBuilder: (_, i) {
             final c = widget.channels[i];
-            final sel = i == _i;
-            final color = sel ? C.select : Colors.white;
+            final color = i == _i ? C.select : Colors.white;
             return Tap(
               onTap: () => _play(i),
               builder: (f) => Container(
-                height: 65.sdp,
                 margin: EdgeInsets.only(top: 5.sdp),
                 padding: EdgeInsets.all(5.sdp),
                 decoration: BoxDecoration(
@@ -376,24 +408,32 @@ class _PlayerLivePageState extends State<PlayerLivePage> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          T('${i + 1}', size: 13, color: color),
-                          T(c.name, size: 11, color: color, lines: 2),
-                        ],
+                      child: SizedBox(
+                        height: 55.sdp,
+                        child: Padding(
+                          padding: EdgeInsets.all(5.sdp),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              T('${i + 1}', size: 13, color: color, weight: FontWeight.bold),
+                              T(c.name, size: 12, color: color, lines: 1),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
-                    SizedBox(width: 4.sdp),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4.sdp),
-                      child: NetImg(
-                        c.icon,
-                        placeholder: 'placeholder_live',
-                        width: 50.sdp,
-                        height: 50.sdp,
-                        fit: BoxFit.contain,
+                    Container(
+                      width: 55.sdp,
+                      height: 55.sdp,
+                      margin: EdgeInsets.all(2.sdp),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(2.sdp),
+                        border: Border.all(color: const Color(0x32FFFFFF), width: 1.sdp),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(2.sdp),
+                        child: NetImg(c.icon, placeholder: 'placeholder_live', fit: BoxFit.contain),
                       ),
                     ),
                   ],
