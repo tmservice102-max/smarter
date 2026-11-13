@@ -3,6 +3,7 @@
 // screen) and then read from the phone.
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -57,11 +58,8 @@ class Library {
     }
     _cats[t] = cats;
     _items[t] = items;
-    final f = await _file(t);
-    await f.writeAsString(jsonEncode({
-      'cats': [for (final c in cats) {'id': c.id, 'n': c.name}],
-      'items': [for (final i in items) i.toJson()],
-    }));
+    final path = (await _file(t)).path;
+    await Isolate.run(() => _writeLib(path, cats, items));
     await _p.setInt(_k(t, 'date'), DateTime.now().millisecondsSinceEpoch);
     await _p.setInt(_k(t, 'count'), items.length);
     return items.length;
@@ -101,15 +99,11 @@ class Library {
       await download(t);
       return;
     }
-    final j = jsonDecode(await f.readAsString()) as Map<String, dynamic>;
-    _cats[t] = [
-      for (final c in (j['cats'] as List? ?? const []))
-        Category('${c['id']}', '${c['n']}')
-    ];
-    _items[t] = [
-      for (final i in (j['items'] as List? ?? const []))
-        StreamItem.fromJson(Map<String, dynamic>.from(i as Map))
-    ];
+    // Read in the background: a big section (100k+ movies) would freeze the UI.
+    final path = f.path;
+    final (cats, items) = await Isolate.run(() => _readLib(path));
+    _cats[t] = cats;
+    _items[t] = items;
   }
 
   List<Category> categories(ContentType t) {
@@ -170,6 +164,27 @@ class Library {
     if (q.isEmpty) return const [];
     return all(t).where((i) => i.name.toLowerCase().contains(q)).toList();
   }
+}
+
+void _writeLib(String path, List<Category> cats, List<StreamItem> items) {
+  File(path).writeAsStringSync(jsonEncode({
+    'cats': [for (final c in cats) {'id': c.id, 'n': c.name}],
+    'items': [for (final i in items) i.toJson()],
+  }));
+}
+
+(List<Category>, List<StreamItem>) _readLib(String path) {
+  final j = jsonDecode(File(path).readAsStringSync()) as Map<String, dynamic>;
+  return (
+    [
+      for (final c in (j['cats'] as List? ?? const []))
+        Category('${c['id']}', '${c['n']}')
+    ],
+    [
+      for (final i in (j['items'] as List? ?? const []))
+        StreamItem.fromJson(Map<String, dynamic>.from(i as Map))
+    ],
+  );
 }
 
 /// "3 secs ago" style text used on the home tiles (FormatUtils.calculateTimeSpan).

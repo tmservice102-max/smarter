@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:isolate';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import '../config.dart';
 import '../models.dart';
@@ -22,15 +24,22 @@ class XtreamSource implements ContentSource {
         ...extra,
       });
 
-  Future<dynamic> _get(Map<String, String> extra) async {
+  Future<Uint8List?> _bytes(Map<String, String> extra, {Duration? timeout}) async {
     final res = await http
         .get(_uri(extra), headers: {'User-Agent': 'IPTVSmartersPro'})
-        .timeout(AppConfig.timeout);
+        .timeout(timeout ?? AppConfig.timeout);
     if (res.statusCode != 200) {
       throw Exception('Server error ${res.statusCode}');
     }
-    if (res.body.trim().isEmpty) return null;
-    return jsonDecode(utf8.decode(res.bodyBytes, allowMalformed: true));
+    return res.bodyBytes.isEmpty ? null : res.bodyBytes;
+  }
+
+  Future<dynamic> _get(Map<String, String> extra) async {
+    final b = await _bytes(extra);
+    if (b == null) return null;
+    // Big answers are decoded off the UI thread so the screen doesn't freeze.
+    if (b.length > 200 * 1024) return Isolate.run(() => _decode(b));
+    return _decode(b);
   }
 
   /// Checks the login. Throws with a readable message if it fails.
@@ -87,46 +96,11 @@ class XtreamSource implements ContentSource {
     if (categoryId != null && categoryId.isNotEmpty) {
       params['category_id'] = categoryId;
     }
-    final j = await _get(params);
-    if (j is! List) return [];
-    final list = j.whereType<Map>().map((m) {
-      switch (type) {
-        case ContentType.live:
-          return StreamItem(
-            type: type,
-            id: _s(m['stream_id']),
-            name: _s(m['name']),
-            icon: _s(m['stream_icon']),
-            categoryId: _s(m['category_id']),
-            epgId: _s(m['epg_channel_id']),
-            // Radio stations come inside the live list (stream_type radio_streams).
-            extension: _s(m['stream_type']) == 'radio_streams' ? 'radio' : '',
-            hasArchive: _s(m['tv_archive']) == '1',
-            added: int.tryParse(_s(m['added'])) ?? 0,
-          );
-        case ContentType.movie:
-          return StreamItem(
-            type: type,
-            id: _s(m['stream_id']),
-            name: _s(m['name']),
-            icon: _s(m['stream_icon']),
-            categoryId: _s(m['category_id']),
-            extension: _s(m['container_extension']),
-            rating: _s(m['rating']),
-            added: int.tryParse(_s(m['added'])) ?? 0,
-          );
-        case ContentType.series:
-          return StreamItem(
-            type: type,
-            id: _s(m['series_id']),
-            name: _s(m['name']),
-            icon: _s(m['cover']),
-            categoryId: _s(m['category_id']),
-            rating: _s(m['rating']),
-            added: int.tryParse(_s(m['last_modified'])) ?? 0,
-          );
-      }
-    }).toList();
+    // Big servers send 100k+ movies: download allows more time, and the
+    // list is decoded and converted in a background isolate.
+    final b = await _bytes(params, timeout: const Duration(minutes: 3));
+    if (b == null) return [];
+    final list = await Isolate.run(() => _parseStreams(b, type));
     _cache[key] = list;
     return list;
   }
@@ -276,4 +250,54 @@ class XtreamSource implements ContentSource {
     final ext = ep.extension.isEmpty ? 'mp4' : ep.extension;
     return '${account.server}/series/${account.username}/${account.password}/${ep.id}.$ext';
   }
+}
+
+dynamic _decode(Uint8List b) {
+  final text = utf8.decode(b, allowMalformed: true).trim();
+  if (text.isEmpty) return null;
+  return jsonDecode(text);
+}
+
+/// get_live_streams / get_vod_streams / get_series answer to StreamItems.
+List<StreamItem> _parseStreams(Uint8List bytes, ContentType type) {
+  final j = _decode(bytes);
+  if (j is! List) return [];
+  return j.whereType<Map>().map((m) {
+    switch (type) {
+      case ContentType.live:
+        return StreamItem(
+          type: type,
+          id: _s(m['stream_id']),
+          name: _s(m['name']),
+          icon: _s(m['stream_icon']),
+          categoryId: _s(m['category_id']),
+          epgId: _s(m['epg_channel_id']),
+          // Radio stations come inside the live list (stream_type radio_streams).
+          extension: _s(m['stream_type']) == 'radio_streams' ? 'radio' : '',
+          hasArchive: _s(m['tv_archive']) == '1',
+          added: int.tryParse(_s(m['added'])) ?? 0,
+        );
+      case ContentType.movie:
+        return StreamItem(
+          type: type,
+          id: _s(m['stream_id']),
+          name: _s(m['name']),
+          icon: _s(m['stream_icon']),
+          categoryId: _s(m['category_id']),
+          extension: _s(m['container_extension']),
+          rating: _s(m['rating']),
+          added: int.tryParse(_s(m['added'])) ?? 0,
+        );
+      case ContentType.series:
+        return StreamItem(
+          type: type,
+          id: _s(m['series_id']),
+          name: _s(m['name']),
+          icon: _s(m['cover']),
+          categoryId: _s(m['category_id']),
+          rating: _s(m['rating']),
+          added: int.tryParse(_s(m['last_modified'])) ?? 0,
+        );
+    }
+  }).toList();
 }

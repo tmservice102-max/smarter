@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import '../models.dart';
 import 'source.dart';
@@ -24,8 +26,7 @@ class M3uSource implements ContentSource {
     if (account.server.startsWith('file://') || account.server.startsWith('/')) {
       final path = account.server.replaceFirst('file://', '');
       final bytes = await File(path).readAsBytes();
-      _items = parse(utf8.decode(bytes, allowMalformed: true));
-      return _items!;
+      return _items = await _parseInBackground(bytes);
     }
     final res = await http
         .get(Uri.parse(account.server))
@@ -33,8 +34,20 @@ class M3uSource implements ContentSource {
     if (res.statusCode != 200) {
       throw Exception('Playlist error ${res.statusCode}');
     }
-    _items = parse(utf8.decode(res.bodyBytes, allowMalformed: true));
-    return _items!;
+    return _items = await _parseInBackground(res.bodyBytes);
+  }
+
+  /// Big playlists are parsed off the UI thread so the screen doesn't freeze.
+  Future<List<StreamItem>> _parseInBackground(Uint8List bytes) async {
+    final (items, groups) = await Isolate.run(() {
+      final p = M3uSource(account);
+      final items = p.parse(utf8.decode(bytes, allowMalformed: true));
+      return (items, p._groupIds);
+    });
+    _groupIds
+      ..clear()
+      ..addAll(groups);
+    return items;
   }
 
   List<StreamItem> parse(String text) {
