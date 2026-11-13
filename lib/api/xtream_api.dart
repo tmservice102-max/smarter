@@ -9,6 +9,12 @@ import 'source.dart';
 
 String _s(dynamic v) => v == null ? '' : v.toString();
 
+/// Seconds -> "1:52:00" (for duration_secs / episode_run_time).
+String _secs(int secs) {
+  if (secs <= 0) return '';
+  return '${secs ~/ 3600}:${(secs % 3600 ~/ 60).toString().padLeft(2, '0')}:00';
+}
+
 /// Xtream Codes player API (player_api.php).
 class XtreamSource implements ContentSource {
   @override
@@ -122,8 +128,10 @@ class XtreamSource implements ContentSource {
       cast: _s(i['cast'] ?? i['actors']),
       director: _s(i['director']),
       genre: _s(i['genre']),
-      releaseDate: _s(i['releasedate'] ?? i['releaseDate'] ?? i['release_date']),
-      duration: _s(i['duration']),
+      releaseDate: _s(i['releasedate'] ?? i['releaseDate'] ?? i['release_date'] ?? i['air_date'] ?? i['year']),
+      duration: _s(i['duration']).isNotEmpty ? _s(i['duration']) : _secs((int.tryParse(_s(i['duration_secs'])) ?? 0) > 0
+              ? int.parse(_s(i['duration_secs']))
+              : (int.tryParse(_s(i['episode_run_time'])) ?? 0) * 60),
       rating: _s(i['rating']),
       cover: _s(i['movie_image'] ?? i['cover']).isNotEmpty
           ? _s(i['movie_image'] ?? i['cover'])

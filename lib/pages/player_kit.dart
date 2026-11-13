@@ -69,12 +69,14 @@ class RoundBtn extends StatelessWidget {
       );
 }
 
-/// Material icon in the same round button (for the 10 s seek buttons).
-class RoundIcon extends StatelessWidget {
-  final IconData icon;
+/// ExoPlayer rewind / fast-forward button: circular arrow with the seconds
+/// inside (Android defaults: back 5 s, forward 15 s).
+class SeekBtn extends StatelessWidget {
+  final int seconds;
+  final bool forward;
   final VoidCallback? onTap;
   final double size;
-  const RoundIcon(this.icon, {super.key, this.onTap, this.size = 36});
+  const SeekBtn({super.key, required this.seconds, required this.forward, this.onTap, this.size = 36});
   @override
   Widget build(BuildContext context) => Tap(
         onTap: onTap,
@@ -82,7 +84,14 @@ class RoundIcon extends StatelessWidget {
           width: size.sdp,
           height: size.sdp,
           decoration: BoxDecoration(shape: BoxShape.circle, color: f ? C.primary : const Color(0x2DFFFFFF)),
-          child: Icon(icon, color: Colors.white, size: size.sdp * 0.6),
+          child: Stack(alignment: Alignment.center, children: [
+            Transform.flip(flipX: forward, child: Icon(Icons.replay, color: Colors.white, size: size.sdp * 0.75)),
+            Padding(
+              padding: EdgeInsets.only(top: size.sdp * 0.08),
+              child: Text('$seconds',
+                  style: TextStyle(color: Colors.white, fontSize: size.sdp * 0.22, fontWeight: FontWeight.bold)),
+            ),
+          ]),
         ),
       );
 }

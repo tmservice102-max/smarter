@@ -198,14 +198,14 @@ class _VodPlayerPageState extends State<VodPlayerPage> {
                     ? const Loader(size: 40)
                     : _controls
                         ? Row(mainAxisSize: MainAxisSize.min, children: [
-                            RoundIcon(Icons.replay_10, onTap: () => _seekBy(-10)),
+                            SeekBtn(seconds: 5, forward: false, onTap: () => _seekBy(-5)),
                             SizedBox(width: 30.sdp),
                             RoundBtn(_playing ? 'ic_pause' : 'ic_play', size: 42, pad: 6, onTap: () {
                               _player.playOrPause();
                               _autoHide();
                             }),
                             SizedBox(width: 30.sdp),
-                            RoundIcon(Icons.forward_10, onTap: () => _seekBy(10)),
+                            SeekBtn(seconds: 15, forward: true, onTap: () => _seekBy(15)),
                           ])
                         : const SizedBox(),
           ),
