@@ -16,9 +16,10 @@ New app written in Flutter. It uses the same admin panel (smartersapp.org).
   TV guide by day.
 - Downloads of movies and episodes for offline viewing (while the app is open).
 - App icon and launch screen.
+- Parental PIN for adult categories, and multi-screen (2 or 4 channels).
 
 ## Not in this version yet
-Multi-screen, the extra home themes, ads, push notifications, OpenVPN, Chromecast.
+The extra home themes, ads, push notifications, OpenVPN, Chromecast.
 
 ## Codemagic workflows
 - `ios-check`: builds the iPhone app without signing, to check it compiles.

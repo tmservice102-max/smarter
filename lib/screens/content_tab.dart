@@ -1,9 +1,11 @@
 import 'package:material_ui/material_ui.dart';
 import '../models.dart';
+import '../parental.dart';
 import '../session.dart';
 import '../store.dart';
 import '../widgets/common.dart';
 import 'items_screen.dart';
+import 'multi_screen.dart';
 
 /// Category list for live, movies or series.
 class ContentTab extends StatefulWidget {
@@ -52,17 +54,29 @@ class _ContentTabState extends State<ContentTab>
                   () => _openItems('Favorites', special: 'fav')),
               _tile(Icons.history, 'Recently watched', '$recentCount',
                   () => _openItems('Recently watched', special: 'recent')),
-              if (widget.type == ContentType.live)
+              if (widget.type == ContentType.live) ...[
                 _tile(Icons.replay_circle_filled_outlined, 'Catch-up TV', null,
                     () => _openItems('Catch-up TV', special: 'catchup')),
+                _tile(Icons.grid_view_rounded, 'Multi-screen', null,
+                    () => Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => const MultiScreen()))),
+              ],
               const Divider(height: 24),
               if (visible.isEmpty)
                 const Padding(
                   padding: EdgeInsets.all(32),
                   child: EmptyView('No categories'),
                 ),
-              ...visible.map((c) => _tile(Icons.folder_outlined, c.name, null,
-                  () => _openItems(c.name, categoryId: c.id))),
+              ...visible.map((c) {
+                final adult = Parental.isAdult(c.name);
+                return _tile(
+                    adult ? Icons.lock_outline : Icons.folder_outlined,
+                    c.name,
+                    null, () async {
+                  if (adult && !await Parental.unlock(context)) return;
+                  _openItems(c.name, categoryId: c.id);
+                });
+              }),
             ],
           ),
         );

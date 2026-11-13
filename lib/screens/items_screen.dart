@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import '../models.dart';
+import '../parental.dart';
 import '../session.dart';
 import '../store.dart';
 import '../widgets/common.dart';
@@ -44,9 +45,23 @@ class _ItemsScreenState extends State<ItemsScreen> {
     if (widget.special == 'recent') return Store.recent(widget.type);
     if (widget.special == 'catchup') {
       final all = await Session.src.streams(widget.type, categoryId: '');
-      return all.where((c) => c.hasArchive).toList();
+      final cats = await Session.src.categories(widget.type);
+      final locked = Parental.unlocked
+          ? <String>{}
+          : cats.where((c) => Parental.isAdult(c.name)).map((c) => c.id).toSet();
+      return all
+          .where((c) => c.hasArchive && !locked.contains(c.categoryId))
+          .toList();
     }
-    return Session.src.streams(widget.type, categoryId: widget.categoryId);
+    final items =
+        await Session.src.streams(widget.type, categoryId: widget.categoryId);
+    if ((widget.categoryId ?? '').isEmpty && !Parental.unlocked) {
+      final cats = await Session.src.categories(widget.type);
+      final locked =
+          cats.where((c) => Parental.isAdult(c.name)).map((c) => c.id).toSet();
+      return items.where((x) => !locked.contains(x.categoryId)).toList();
+    }
+    return items;
   }
 
   List<StreamItem> _sorted(List<StreamItem> items) {

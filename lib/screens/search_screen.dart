@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:material_ui/material_ui.dart';
 import '../models.dart';
+import '../parental.dart';
 import '../session.dart';
 import '../widgets/common.dart';
 import 'items_screen.dart';
@@ -26,7 +27,15 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Future<void> _loadAll() async {
     try {
-      final all = await Session.src.streams(widget.type, categoryId: '');
+      var all = await Session.src.streams(widget.type, categoryId: '');
+      if (!Parental.unlocked) {
+        final cats = await Session.src.categories(widget.type);
+        final locked = cats
+            .where((c) => Parental.isAdult(c.name))
+            .map((c) => c.id)
+            .toSet();
+        all = all.where((x) => !locked.contains(x.categoryId)).toList();
+      }
       if (mounted) setState(() => _all = all);
     } catch (e) {
       if (mounted) setState(() => _error = friendlyError(e));

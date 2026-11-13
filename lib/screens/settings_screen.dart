@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../api/panel_api.dart';
 import '../config.dart';
 import '../models.dart';
+import '../parental.dart';
 import '../session.dart';
 import '../store.dart';
 import '../widgets/common.dart';
@@ -151,6 +152,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: const Text('Play next episode automatically'),
         value: Store.autoplayNext,
         onChanged: (v) => setState(() => Store.autoplayNext = v),
+      ),
+      ListTile(
+        leading: const Icon(Icons.lock_outline),
+        title: Text(Store.parentalPin.isEmpty
+            ? 'Set parental PIN'
+            : 'Change parental PIN'),
+        subtitle: const Text('Locks adult categories'),
+        onTap: () async {
+          await Parental.changePin(context);
+          if (mounted) setState(() {});
+        },
       ),
       ListTile(
         leading: const Icon(Icons.history),
