@@ -60,6 +60,7 @@ class _UsersListPageState extends State<UsersListPage> {
     final list = Store.accounts;
     final w = MediaQuery.sizeOf(context).width / 6;
     return PageBg(
+      side: 0,
       child: Column(
         children: [
           SizedBox(height: 30.sdp),
@@ -162,6 +163,7 @@ class _ProfileLoading extends StatelessWidget {
     return PopScope(
       canPop: false,
       child: PageBg(
+        side: 0,
         child: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(

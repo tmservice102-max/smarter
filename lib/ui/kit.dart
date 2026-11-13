@@ -72,11 +72,32 @@ class G {
 class PageBg extends StatelessWidget {
   final Widget child;
   final bool safe;
-  const PageBg({super.key, required this.child, this.safe = true});
+
+  /// Extra side margin in sdp. Android screens use padding 5sdp plus
+  /// paddingStart/End 25sdp; pages add the 5sdp themselves, so 20 here.
+  /// Notches / system bars count towards it (whichever is bigger).
+  final double side;
+  const PageBg({super.key, required this.child, this.safe = true, this.side = 20});
 
   @override
   Widget build(BuildContext context) {
     Dim.init(context);
+    Widget body = child;
+    if (safe) {
+      final p = MediaQuery.paddingOf(context);
+      final s = side.sdp;
+      body = MediaQuery.removePadding(
+        context: context,
+        removeLeft: true,
+        removeTop: true,
+        removeRight: true,
+        removeBottom: true,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(p.left > s ? p.left : s, p.top, p.right > s ? p.right : s, p.bottom),
+          child: child,
+        ),
+      );
+    }
     return Scaffold(
       backgroundColor: C.bgBottom,
       resizeToAvoidBottomInset: true,
@@ -88,7 +109,7 @@ class PageBg extends StatelessWidget {
             colors: [C.bgBottom, C.bgTop],
           ),
         ),
-        child: SizedBox.expand(child: safe ? SafeArea(child: child) : child),
+        child: SizedBox.expand(child: body),
       ),
     );
   }

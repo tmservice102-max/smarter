@@ -87,7 +87,7 @@ class SelectPlayerPage extends StatelessWidget {
         builder: (context, box) {
           final opts = _options(context);
           return Padding(
-            padding: EdgeInsets.fromLTRB(25.sdp, 5.sdp, 25.sdp, 5.sdp),
+            padding: EdgeInsets.all(5.sdp),
             child: Column(
               children: [
                 Expanded(

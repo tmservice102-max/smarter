@@ -31,7 +31,8 @@ Future<void> loginPanelUser(BuildContext context, PanelUser u) async {
         password: u.password,
         kind: u.type == 'xui' ? 'xui' : 'stream',
       );
-      await XtreamSource.login(a);
+      final info = await XtreamSource.login(a);
+      Store.streamFormat = info.formats.isEmpty ? 0 : (info.formats.contains('m3u8') ? 2 : 1);
       await Store.saveAccount(a);
       await Store.setCurrent(a);
       Library.reset();
@@ -39,7 +40,7 @@ Future<void> loginPanelUser(BuildContext context, PanelUser u) async {
     Busy.hide();
     if (!context.mounted) return;
     toast(context, 'Login successfully.');
-    openHome(context);
+    openHome(context, fresh: true);
   } catch (_) {
     Busy.hide();
     if (context.mounted) toast(context, S.err_login_not_incorrect, error: true);

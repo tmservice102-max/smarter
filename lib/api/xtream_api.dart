@@ -67,7 +67,14 @@ class XtreamSource implements ContentSource {
     DateTime? exp;
     final e = int.tryParse(_s(u['exp_date']));
     if (e != null) exp = DateTime.fromMillisecondsSinceEpoch(e * 1000);
-    return AccountInfo(_s(u['status']), exp, _s(u['max_connections']), _s(u['active_cons']));
+    final f = u['allowed_output_formats'];
+    return AccountInfo(
+      _s(u['status']),
+      exp,
+      _s(u['max_connections']),
+      _s(u['active_cons']),
+      formats: f is List ? [for (final x in f) _s(x)] : const [],
+    );
   }
 
   String _action(ContentType t, String what) {

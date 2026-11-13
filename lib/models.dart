@@ -319,5 +319,8 @@ class AccountInfo {
   final DateTime? expires;
   final String maxConnections;
   final String activeConnections;
-  AccountInfo(this.status, this.expires, this.maxConnections, this.activeConnections);
+
+  /// user_info.allowed_output_formats, e.g. ["m3u8", "ts"].
+  final List<String> formats;
+  AccountInfo(this.status, this.expires, this.maxConnections, this.activeConnections, {this.formats = const []});
 }

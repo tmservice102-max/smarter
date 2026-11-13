@@ -127,13 +127,15 @@ class _SignInPageState extends State<SignInPage> {
       kind: widget.stream ? 'stream' : 'xui',
     );
     try {
-      await XtreamSource.login(a);
+      final info = await XtreamSource.login(a);
+      // Like SignInActivity: HLS if the server allows m3u8, else MPEGTS.
+      Store.streamFormat = info.formats.isEmpty ? 0 : (info.formats.contains('m3u8') ? 2 : 1);
       await Store.saveAccount(a);
       await Store.setCurrent(a);
       Library.reset();
       if (!mounted) return;
       toast(context, 'Login successfully.');
-      openHome(context);
+      openHome(context, fresh: true);
     } catch (_) {
       if (!mounted) return;
       setState(() => _busy = false);

@@ -194,6 +194,7 @@ class _MultiScreenPageState extends State<MultiScreenPage> {
     final v = _visible(_layout);
     final gap = SizedBox(width: 10.sdp, height: 10.sdp);
     return PageBg(
+      side: 0,
       child: Stack(
         children: [
           Padding(

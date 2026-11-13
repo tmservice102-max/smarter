@@ -94,6 +94,7 @@ class _LauncherPageState extends State<LauncherPage> {
   @override
   Widget build(BuildContext context) {
     return PageBg(
+      side: 0,
       child: Stack(
         children: [
           Center(

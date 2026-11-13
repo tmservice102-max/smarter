@@ -15,14 +15,16 @@ import 'users_list_page.dart';
 
 void openSelectPlayer(BuildContext context) => go(context, const SelectPlayerPage(), clear: true);
 
-void openHome(BuildContext context) {
+/// [fresh]: right after logging in, so the home screen downloads Live TV,
+/// Movies and Series by itself.
+void openHome(BuildContext context, {bool fresh = false}) {
   final a = Store.currentAccount;
   if (a == null) {
     openSelectPlayer(context);
   } else if (a.kind == 'playlist') {
     go(context, const PlaylistHomePage(), clear: true);
   } else {
-    go(context, const HomePage(), clear: true);
+    go(context, HomePage(autoLoad: fresh), clear: true);
   }
 }
 

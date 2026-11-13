@@ -204,9 +204,9 @@ String timeSpan(DateTime? d) {
   return '$days days ago';
 }
 
-/// 12345 -> "12.3K" like FormatUtils.format.
+/// 12345 -> "12.3k" like FormatUtils.format.
 String shortCount(int n) {
   if (n < 1000) return '$n';
-  if (n < 1000000) return '${(n / 1000).toStringAsFixed(n % 1000 == 0 ? 0 : 1)}K';
+  if (n < 1000000) return '${(n / 1000).toStringAsFixed(n % 1000 == 0 ? 0 : 1)}k';
   return '${(n / 1000000).toStringAsFixed(1)}M';
 }

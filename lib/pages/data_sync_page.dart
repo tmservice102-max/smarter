@@ -67,6 +67,7 @@ class _DataSyncPageState extends State<DataSyncPage> {
       child: T(t, size: 12, align: TextAlign.center, weight: FontWeight.bold),
     );
     return PageBg(
+      side: 0,
       child: Padding(
         padding: EdgeInsets.all(5.sdp),
         child: Column(

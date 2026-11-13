@@ -77,7 +77,8 @@ mixin HomeActions<W extends StatefulWidget> on State<W> {
 
   Library get lib => Library.I;
 
-  Future<void> downloadSection(ContentType t) async {
+  /// [quiet]: no blocking "loading" dialog (automatic load after login).
+  Future<void> downloadSection(ContentType t, {bool quiet = false}) async {
     if (progress[t] != null) return;
     setState(() => progress[t] = 0);
     final timer = Timer.periodic(const Duration(milliseconds: 40), (tm) {
@@ -85,11 +86,11 @@ mixin HomeActions<W extends StatefulWidget> on State<W> {
       if (p == null || p >= 0.5) return;
       setState(() => progress[t] = p + 0.01);
     });
-    Busy.show(context);
+    if (!quiet) Busy.show(context);
     try {
       await lib.download(t);
       timer.cancel();
-      Busy.hide();
+      if (!quiet) Busy.hide();
       for (var p = (progress[t] ?? 0.5); p < 1; p += 0.02) {
         await Future.delayed(const Duration(milliseconds: 10));
         if (!mounted) return;
@@ -100,7 +101,7 @@ mixin HomeActions<W extends StatefulWidget> on State<W> {
       toast(context, S.added_success);
     } catch (e) {
       timer.cancel();
-      Busy.hide();
+      if (!quiet) Busy.hide();
       await lib.clear(t);
       if (!mounted) return;
       setState(() => progress[t] = null);
@@ -140,7 +141,9 @@ mixin HomeActions<W extends StatefulWidget> on State<W> {
 }
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  /// Download the sections that aren't on the phone yet (after login).
+  final bool autoLoad;
+  const HomePage({super.key, this.autoLoad = false});
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -158,7 +161,17 @@ class _HomePageState extends State<HomePage> with HomeActions {
     _tick = Timer.periodic(const Duration(seconds: 30), (_) {
       if (mounted) setState(() {});
     });
-    WidgetsBinding.instance.addPostFrameCallback((_) => _popupAd());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _popupAd();
+      if (widget.autoLoad) _autoLoad();
+    });
+  }
+
+  Future<void> _autoLoad() async {
+    for (final t in [ContentType.live, ContentType.movie, ContentType.series]) {
+      if (!mounted) return;
+      if (!lib.has(t)) await downloadSection(t, quiet: true);
+    }
   }
 
   @override
@@ -271,6 +284,8 @@ class _HomePageState extends State<HomePage> with HomeActions {
                                   gradient: G.movies,
                                   icon: 'ic_movie',
                                   iconSize: 50,
+                                  contentTop: 1,
+                                  contentBottom: 15,
                                   title: S.movies_home,
                                   titleSize: 15,
                                   type: ContentType.movie,
@@ -287,6 +302,8 @@ class _HomePageState extends State<HomePage> with HomeActions {
                                   gradient: G.series,
                                   icon: 'ic_series',
                                   iconSize: 50,
+                                  contentTop: 1,
+                                  contentBottom: 15,
                                   title: S.series_home,
                                   titleSize: 15,
                                   type: ContentType.series,
@@ -374,8 +391,14 @@ class BigTile extends StatelessWidget {
   final double? progress;
   final VoidCallback onTap;
   final VoidCallback onRenew;
+
+  /// Movies / Series: paddingTop 1sdp, paddingBottom 15sdp (icon sits higher).
+  final double contentTop;
+  final double contentBottom;
   const BigTile({
     super.key,
+    this.contentTop = 0,
+    this.contentBottom = 0,
     required this.gradient,
     required this.icon,
     required this.iconSize,
@@ -407,15 +430,32 @@ class BigTile extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
+              // Not downloaded / loading: the background is darkened
+              // (vw_live_tv), the loaded part shows again as a bar that
+              // fills from the left (ProgressBar pb_gradient). Icon and
+              // title stay white on top.
+              if (!has || progress != null) const ColoredBox(color: Color(0xB3000000)),
+              if (progress != null)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: FractionallySizedBox(
+                    widthFactor: (progress ?? 0).clamp(0.0, 1.0),
+                    heightFactor: 1,
+                    child: DecoratedBox(decoration: BoxDecoration(gradient: gradient)),
+                  ),
+                ),
               const Positioned.fill(child: TilePattern()),
               Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Ic(icon, size: iconSize.sdp),
-                    SizedBox(height: 4.sdp),
-                    T(title, size: titleSize, weight: FontWeight.bold),
-                  ],
+                child: Padding(
+                  padding: EdgeInsets.only(top: contentTop.sdp, bottom: contentBottom.sdp),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Ic(icon, size: iconSize.sdp),
+                      SizedBox(height: 2.sdp),
+                      T(title, size: titleSize, weight: FontWeight.bold),
+                    ],
+                  ),
                 ),
               ),
               // count badge
@@ -467,28 +507,6 @@ class BigTile extends StatelessWidget {
                   ),
                 ),
               ),
-              if (!has || progress != null) const ColoredBox(color: Color(0xB3000000)),
-              if (progress != null)
-                Center(
-                  child: SizedBox(
-                    width: 50.sdp,
-                    height: 50.sdp,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        SizedBox.expand(
-                          child: CircularProgressIndicator(
-                            value: progress,
-                            color: Colors.white,
-                            strokeWidth: 3,
-                            backgroundColor: Colors.white24,
-                          ),
-                        ),
-                        T('${((progress ?? 0) * 100).round()}%', size: 9),
-                      ],
-                    ),
-                  ),
-                ),
             ],
           ),
         ),
@@ -510,18 +528,16 @@ class SmallTile extends StatelessWidget {
       onTap: onTap,
       builder: (f) => Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF4DB6AC),
+          // bg_card_all, darkened (vw_*) until Live TV is downloaded.
+          color: dim ? Color.alphaBlend(const Color(0xB3000000), const Color(0xFF4DB6AC)) : const Color(0xFF4DB6AC),
           borderRadius: BorderRadius.circular(5.sdp),
           border: f ? Border.all(color: Colors.white, width: 3.sdp) : null,
         ),
-        foregroundDecoration: dim
-            ? BoxDecoration(color: const Color(0xB3000000), borderRadius: BorderRadius.circular(5.sdp))
-            : null,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Ic(icon, size: 18.sdp),
-            SizedBox(width: 5.sdp),
+            Ic(icon, size: 18.sdp, pad: 1.sdp),
+            SizedBox(width: 3.sdp),
             Flexible(child: T(title, size: 10, lines: 1, weight: FontWeight.bold)),
           ],
         ),

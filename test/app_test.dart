@@ -47,7 +47,7 @@ http://s/movie/u/p/2.mkv
 
   test('helpers match the Android formatting', () {
     expect(shortCount(950), '950');
-    expect(shortCount(12345), '12.3K');
+    expect(shortCount(12345), '12.3k');
     expect(durationText('01:45:00'), '1h 45m');
     expect(durationText('95'), '1h 35m');
     expect(Parental.isAdult('Adults 18+'), isTrue);
