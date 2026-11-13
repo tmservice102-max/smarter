@@ -70,6 +70,5 @@ workflows:
     scripts:
       - flutter pub get
       - flutter build ios --simulator --debug
-      - cd build/ios/iphonesimulator && zip -r ../../../Runner-simulator.zip Runner.app
     artifacts:
-      - Runner-simulator.zip
+      - build/ios/iphonesimulator/*.app
