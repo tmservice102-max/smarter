@@ -67,10 +67,19 @@ class Store {
 
   static List<StreamItem> recent(ContentType t) => _items('recent').where((x) => x.type == t).toList();
 
+  /// Keeps the newest [liveLimit] channels and [movieLimit] movies / series
+  /// (General settings "Recently Added Limit").
   static Future<void> addRecent(StreamItem it) async {
     final list = _items('recent')..removeWhere((x) => x.key == it.key);
     list.insert(0, it);
-    await _setItems('recent', list.take(60).toList());
+    final count = <ContentType, int>{};
+    final kept = <StreamItem>[];
+    for (final x in list) {
+      final n = (count[x.type] ?? 0) + 1;
+      count[x.type] = n;
+      if (n <= (x.type == ContentType.live ? liveLimit : movieLimit)) kept.add(x);
+    }
+    await _setItems('recent', kept);
   }
 
   static Future<void> clearRecent() => _p.remove(_k('recent'));
@@ -97,13 +106,39 @@ class Store {
   static Future<void> setResume(String key, int seconds) => _p.setInt('pos|$key', seconds);
 
   // Settings
-  static bool get use24h => _p.getBool('use24h') ?? true;
+  static bool get use24h => _p.getBool('use24h') ?? false;
   static set use24h(bool v) => _p.setBool('use24h', v);
 
-  static bool get autoplayNext => _p.getBool('autoplayNext') ?? true;
+  // Defaults as in the Android SPHelper.
+  static bool get autoplayNext => _p.getBool('autoplayNext') ?? false;
   static set autoplayNext(bool v) => _p.setBool('autoplayNext', v);
 
   /// Live stream format: 0 default, 1 MPEGTS (.ts), 2 HLS (.m3u8).
+  /// Multi-screen: ask for the layout each time (is_screen) and the saved
+  /// layout 1..5 (screen_data).
+  static bool get multiScreenPopup => _p.getBool('is_screen') ?? true;
+  static set multiScreenPopup(bool v) => _p.setBool('is_screen', v);
+  static int get multiScreenLayout => _p.getInt('screen_data') ?? 5;
+  static set multiScreenLayout(int v) => _p.setInt('screen_data', v);
+
+  /// Automation: which sections the start-up sync refreshes.
+  static bool get updateLive => _p.getBool('auto_update_live') ?? true;
+  static set updateLive(bool v) => _p.setBool('auto_update_live', v);
+  static bool get updateMovies => _p.getBool('auto_update_movies') ?? true;
+  static set updateMovies(bool v) => _p.setBool('auto_update_movies', v);
+  static bool get updateSeries => _p.getBool('auto_update_series') ?? true;
+  static set updateSeries(bool v) => _p.setBool('auto_update_series', v);
+
+  /// General: recently-watched list sizes and the player User-Agent.
+  static int get liveLimit => _p.getInt('live_limit') ?? 20;
+  static set liveLimit(int v) => _p.setInt('live_limit', v);
+  static int get movieLimit => _p.getInt('movie_limit') ?? 20;
+  static set movieLimit(int v) => _p.setInt('movie_limit', v);
+  static String get agentName => _p.getString('agent_name') ?? '';
+  static set agentName(String v) => _p.setString('agent_name', v);
+  static bool get splashAudio => _p.getBool('splash_audio') ?? true;
+  static set splashAudio(bool v) => _p.setBool('splash_audio', v);
+
   static int get streamFormat => _p.getInt('stream_format') ?? 0;
   static set streamFormat(int v) => _p.setInt('stream_format', v);
 

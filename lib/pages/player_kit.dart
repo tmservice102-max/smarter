@@ -15,7 +15,8 @@ const playerAgent = 'IPTVSmartersPro';
 
 Player newPlayer() => Player(configuration: const PlayerConfiguration(bufferSize: 64 * 1024 * 1024));
 
-Media media(String url) => Media(url, httpHeaders: {'User-Agent': playerAgent});
+Media media(String url) =>
+    Media(url, httpHeaders: {'User-Agent': Store.agentName.isEmpty ? playerAgent : Store.agentName});
 
 /// Call when a player page opens / closes.
 void playerEnter() {

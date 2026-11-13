@@ -1,7 +1,9 @@
 // Splash screen (LauncherActivity / activity_launcher.xml).
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:material_ui/material_ui.dart';
+import 'package:media_kit/media_kit.dart';
 
 import '../api/panel_api.dart';
 import '../config.dart';
@@ -23,11 +25,45 @@ class LauncherPage extends StatefulWidget {
 
 class _LauncherPageState extends State<LauncherPage> {
   bool _loading = true;
+  Player? _audio;
+  Future<void>? _audioDone;
 
   @override
   void initState() {
     super.initState();
+    // "Splash Screen Music" (General settings): the opener sound plays first
+    // and the app moves on when it ends, like LauncherActivity.
+    if (Store.splashAudio) _audioDone = _playAudio();
     WidgetsBinding.instance.addPostFrameCallback((_) => _start());
+  }
+
+  @override
+  void dispose() {
+    _audio?.dispose();
+    super.dispose();
+  }
+
+  Future<void> _playAudio() async {
+    final p = Player();
+    _audio = p;
+    final done = Completer<void>();
+    void finish() {
+      if (!done.isCompleted) done.complete();
+    }
+
+    final subs = [
+      p.stream.completed.listen((c) {
+        if (c) finish();
+      }),
+      p.stream.error.listen((_) => finish()),
+    ];
+    try {
+      await p.open(Media('asset:///assets/audio/opener_logo.mp3'));
+      await done.future.timeout(const Duration(seconds: 9), onTimeout: () {});
+    } catch (_) {}
+    for (final s in subs) {
+      await s.cancel();
+    }
   }
 
   Future<void> _start() async {
@@ -72,17 +108,23 @@ class _LauncherPageState extends State<LauncherPage> {
     _next();
   }
 
-  void _next() {
+  Future<void> _next() async {
+    if (_audioDone != null) {
+      await _audioDone;
+      if (!mounted) return;
+    }
     final a = Store.currentAccount;
     if (a == null) {
       openSelectPlayer(context);
       return;
     }
-    // Refresh the saved lists when they are older than the Android default (5 hours).
+    // Refresh the saved lists when they are older than the Automation
+    // setting (Android default 5 hours).
     if (a.kind != 'playlist') {
       final lib = Library.I;
       final dates = ContentType.values.map(lib.updated).whereType<DateTime>().toList();
-      final old = dates.isNotEmpty && dates.any((d) => DateTime.now().difference(d).inHours > 5);
+      final hours = Store.autoUpdateHours;
+      final old = hours > 0 && dates.isNotEmpty && dates.any((d) => DateTime.now().difference(d).inHours >= hours);
       if (old) {
         go(context, const DataSyncPage(), clear: true);
         return;

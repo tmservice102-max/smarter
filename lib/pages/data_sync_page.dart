@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../library.dart';
 import '../models.dart';
+import '../store.dart';
 import '../ui/kit.dart';
 import '../ui/strings.dart';
 import 'nav.dart';
@@ -33,6 +34,13 @@ class _DataSyncPageState extends State<DataSyncPage> {
     });
     final lib = Library.I;
     if (!lib.has(t)) return;
+    // Automation settings: which sections are refreshed.
+    final on = switch (t) {
+      ContentType.live => Store.updateLive,
+      ContentType.movie => Store.updateMovies,
+      ContentType.series => Store.updateSeries,
+    };
+    if (!on) return;
     try {
       await lib.download(t);
     } catch (_) {}

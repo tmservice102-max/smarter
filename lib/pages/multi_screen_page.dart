@@ -5,15 +5,18 @@ import 'package:media_kit_video/media_kit_video.dart';
 
 import '../library.dart';
 import '../models.dart';
-import '../parental.dart';
 import '../session.dart';
 import '../store.dart';
 import '../ui/kit.dart';
-import '../ui/strings.dart';
+import '../ui/dialogs.dart';
+import 'list_page.dart';
 import 'player_kit.dart';
 
 class MultiScreenPage extends StatefulWidget {
-  const MultiScreenPage({super.key});
+  /// Opened from the live player: this channel plays in the first screen and
+  /// the saved layout is used without asking ("is_player").
+  final StreamItem? first;
+  const MultiScreenPage({super.key, this.first});
   @override
   State<MultiScreenPage> createState() => _MultiScreenPageState();
 }
@@ -27,14 +30,19 @@ class _Slot {
 
 class _MultiScreenPageState extends State<MultiScreenPage> {
   final _slots = List.generate(4, (_) => _Slot());
-  int _layout = Store.prefs.getInt('multi_screen') ?? 0; // 1..5, 0 = ask
+  int _layout = Store.multiScreenLayout.clamp(1, 5);
 
   @override
   void initState() {
     super.initState();
     playerEnter();
     Library.I.load(ContentType.live).catchError((_) {});
-    if (_layout == 0) WidgetsBinding.instance.addPostFrameCallback((_) => _chooseLayout());
+    final first = widget.first;
+    if (first != null) {
+      _start(0, first);
+    } else if (Store.multiScreenPopup) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _chooseLayout());
+    }
   }
 
   @override
@@ -47,62 +55,8 @@ class _MultiScreenPageState extends State<MultiScreenPage> {
   }
 
   Future<void> _chooseLayout() async {
-    final r = await showGeneralDialog<int>(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: 'close',
-      barrierColor: Colors.black54,
-      pageBuilder: (ctx, _, _) => Center(
-        child: Material(
-          color: Colors.transparent,
-          child: Container(
-            width: 380.sdp,
-            padding: EdgeInsets.all(15.sdp),
-            color: const Color(0xCB1B1B1B),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                T(S.choose_multi_screen_layout, size: 12),
-                SizedBox(height: 8.sdp),
-                Row(children: [for (var i = 1; i <= 3; i++) _layoutBtn(ctx, i)]),
-                SizedBox(height: 5.sdp),
-                Row(
-                  children: [
-                    for (var i = 4; i <= 5; i++) _layoutBtn(ctx, i),
-                    const Expanded(child: SizedBox()),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-    if (r != null) {
-      await Store.prefs.setInt('multi_screen', r);
-      setState(() => _layout = r);
-    } else if (_layout == 0) {
-      setState(() => _layout = 5);
-    }
-  }
-
-  /// Layout pictures from the Android app (screen_one ... screen_five).
-  Widget _layoutBtn(BuildContext ctx, int n) {
-    const names = ['one', 'two', 'three', 'four', 'five'];
-    return Expanded(
-      child: Tap(
-        onTap: () => Navigator.pop(ctx, n),
-        builder: (f) => Container(
-          height: 80.sdp,
-          margin: EdgeInsets.all(3.sdp),
-          padding: EdgeInsets.all(5.sdp),
-          decoration: BoxDecoration(
-            border: Border.all(color: f || n == _layout ? C.select : const Color(0x33FFFFFF), width: 2.sdp),
-          ),
-          child: Image.asset('assets/img/screen_${names[n - 1]}.webp', fit: BoxFit.contain),
-        ),
-      ),
-    );
+    final r = await screenDialog(context);
+    if (r != null && mounted) setState(() => _layout = r);
   }
 
   /// Which of the 4 screens show in each layout (setScreen in the Android app).
@@ -115,8 +69,13 @@ class _MultiScreenPageState extends State<MultiScreenPage> {
   };
 
   Future<void> _add(int i) async {
-    final ch = await go<StreamItem>(context, const _PickChannelPage());
+    final playlist = Store.currentAccount?.type == AccountType.playlist;
+    final ch = await go<StreamItem>(context, ListPage(type: ContentType.live, playlist: playlist, pick: true));
     if (ch == null || !mounted) return;
+    await _start(i, ch);
+  }
+
+  Future<void> _start(int i, StreamItem ch) async {
     final s = _slots[i];
     s.player ??= newPlayer();
     s.video ??= VideoController(s.player!);
@@ -126,7 +85,7 @@ class _MultiScreenPageState extends State<MultiScreenPage> {
     s.muted = anyOn;
     await s.player!.setVolume(s.muted ? 0 : 100);
     s.player!.open(media(Session.src.streamUrl(ch)));
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   void _sound(int i) {
@@ -194,7 +153,7 @@ class _MultiScreenPageState extends State<MultiScreenPage> {
     final v = _visible(_layout);
     final gap = SizedBox(width: 10.sdp, height: 10.sdp);
     return PageBg(
-      side: 0,
+      side: 10,
       child: Stack(
         children: [
           Padding(
@@ -223,119 +182,16 @@ class _MultiScreenPageState extends State<MultiScreenPage> {
               ],
             ),
           ),
+          // Android uses the system back key; the iPhone needs a button.
           Positioned(
-            left: 12.sdp,
-            top: 12.sdp,
+            left: 4.sdp,
+            top: 4.sdp,
             child: Container(
               decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0x66000000)),
-              child: IconTap('ic_arrow_left', size: 30, pad: 5, onTap: () => Navigator.maybePop(context)),
-            ),
-          ),
-          Positioned(
-            right: 12.sdp,
-            top: 12.sdp,
-            child: Container(
-              decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0x66000000)),
-              child: IconTap('ic_multiple_screen', size: 30, pad: 6, onTap: _chooseLayout),
+              child: IconTap('ic_arrow_left', size: 26, pad: 5, onTap: () => Navigator.maybePop(context)),
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// Pick a channel for one screen (FilterActivity): categories left, channels right.
-class _PickChannelPage extends StatefulWidget {
-  const _PickChannelPage();
-  @override
-  State<_PickChannelPage> createState() => _PickChannelPageState();
-}
-
-class _PickChannelPageState extends State<_PickChannelPage> {
-  String _cat = '';
-  @override
-  void initState() {
-    super.initState();
-    final cats = Library.I.categories(ContentType.live);
-    _cat = cats.isEmpty ? '' : cats.first.id;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final hidden = Store.hiddenCategories.toSet();
-    final cats = [
-      Category(Library.fav, S.favourite),
-      ...Library.I.categories(ContentType.live).where((c) => !hidden.contains('live:${c.id}')),
-    ];
-    final items = Library.I.items(ContentType.live, _cat);
-    return PageBg(
-      child: Padding(
-        padding: EdgeInsets.all(5.sdp),
-        child: Column(
-          children: [
-            PageTop(title: S.channels, icon: 'list_channels'),
-            SizedBox(height: 4.sdp),
-            Expanded(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    flex: 10,
-                    child: ListView(
-                      children: [
-                        for (final c in cats)
-                          Tap(
-                            onTap: () async {
-                              if (!await Parental.check(context, c.name)) return;
-                              setState(() => _cat = c.id);
-                            },
-                            builder: (f) => Container(
-                              color: f ? const Color(0x2DFFFFFF) : null,
-                              padding: EdgeInsets.symmetric(horizontal: 8.sdp, vertical: 7.sdp),
-                              child: T(c.name, size: 12, lines: 1, color: c.id == _cat ? C.select : Colors.white),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  Container(width: 1.sdp, color: const Color(0x1BFFFFFF)),
-                  Expanded(
-                    flex: 20,
-                    child: items.isEmpty
-                        ? Empty(S.err_no_data_found)
-                        : ListView.builder(
-                            itemCount: items.length,
-                            itemBuilder: (_, i) => Tap(
-                              onTap: () => Navigator.pop(context, items[i]),
-                              builder: (f) => Container(
-                                height: 35.sdp,
-                                color: f ? const Color(0x2DFFFFFF) : null,
-                                padding: EdgeInsets.symmetric(horizontal: 6.sdp),
-                                child: Row(
-                                  children: [
-                                    SizedBox(
-                                      width: 50.sdp,
-                                      height: 30.sdp,
-                                      child: NetImg(
-                                        items[i].icon,
-                                        placeholder: 'placeholder_live',
-                                        fit: BoxFit.contain,
-                                      ),
-                                    ),
-                                    SizedBox(width: 6.sdp),
-                                    Expanded(child: T(items[i].name, size: 12, lines: 1)),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -46,7 +46,10 @@ void openItem(BuildContext context, StreamItem item, List<StreamItem> list) {
 class ListPage extends StatefulWidget {
   final ContentType type;
   final bool playlist; // M3U lists have no special categories
-  const ListPage({super.key, required this.type, this.playlist = false});
+
+  /// Multiscreen channel picker (FilterActivity): a tap returns the item.
+  final bool pick;
+  const ListPage({super.key, required this.type, this.playlist = false, this.pick = false});
   @override
   State<ListPage> createState() => _ListPageState();
 }
@@ -192,7 +195,13 @@ class _ListPageState extends State<ListPage> {
                       },
                     ),
                   TopBtn('ic_filter_list', onTap: _filter),
-                  TopBtn('ic_search', onTap: () => go(context, SearchPage(type: t))),
+                  TopBtn(
+                    'ic_search',
+                    onTap: () async {
+                      final r = await go<StreamItem>(context, SearchPage(type: t, pick: widget.pick));
+                      if (r != null && context.mounted) Navigator.pop(context, r);
+                    },
+                  ),
                 ],
               ),
             ),
@@ -262,6 +271,7 @@ class _ListPageState extends State<ListPage> {
                         : _Grid(
                             type: t,
                             items: _items!,
+                            pick: widget.pick,
                             onBack: () => setState(() => _items = Library.I.items(t, _sel)),
                           ),
                   ),
@@ -314,7 +324,8 @@ class _Grid extends StatelessWidget {
   final ContentType type;
   final List<StreamItem> items;
   final VoidCallback onBack;
-  const _Grid({required this.type, required this.items, required this.onBack});
+  final bool pick;
+  const _Grid({required this.type, required this.items, required this.onBack, this.pick = false});
   @override
   Widget build(BuildContext context) {
     final live = type == ContentType.live;
@@ -325,9 +336,7 @@ class _Grid extends StatelessWidget {
       itemBuilder: (context, i) => PosterCard(
         item: items[i],
         live: live,
-        onTap: () async {
-          openItem(context, items[i], items);
-        },
+        onTap: () => pick ? Navigator.pop(context, items[i]) : openItem(context, items[i], items),
       ),
     );
   }

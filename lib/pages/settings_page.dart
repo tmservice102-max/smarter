@@ -1,5 +1,8 @@
 // Settings (SettingActivity: grid of row_list_setting cards) and its sub pages.
+import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../config.dart';
 import '../models.dart';
@@ -13,6 +16,16 @@ import 'details_kit.dart';
 import 'nav.dart';
 import 'notifications_page.dart';
 import 'profile_page.dart';
+import 'speed_test_page.dart';
+
+/// Wifi Setting / Notification Setting: iOS only lets apps open their own
+/// page in the Settings app.
+Future<void> _openPhoneSettings(BuildContext context) async {
+  try {
+    if (await launchUrl(Uri.parse('app-settings:'))) return;
+  } catch (_) {}
+  if (context.mounted) toast(context, 'Open the Settings app on your phone');
+}
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -21,6 +34,7 @@ class SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final a = Store.currentAccount;
     final xtream = a?.type == AccountType.xtream;
+    // Same order as SettingActivity (VPN is not part of the iPhone app).
     final items = <(String, String, VoidCallback)>[
       (S.general_setting, 'ic_player_setting', () => go(context, const _GeneralPage())),
       (S.ui, 'ic_pencil_ruler', () => go(context, const _UiPage())),
@@ -30,15 +44,21 @@ class SettingsPage extends StatelessWidget {
       if (xtream) (S.automation, 'ic_engineering', () => go(context, const _AutomationPage())),
       (S.player_setting, 'ic_video_settings', () => go(context, const _PlayerPage())),
       (S.time_format, 'ic_time', () => go(context, const _TimeFormatPage())),
+      (S.wifi_setting, 'ic_wifi', () => _openPhoneSettings(context)),
       (S.download_setting, 'ic_file_download_not', () => go(context, const _DownloadPage())),
+      (S.post_notification, 'ic_round_notification', () => _openPhoneSettings(context)),
       (S.notifications, 'ic_round_notifications', () => go(context, const NotificationsPage())),
       (S.parental_control, 'ic_player_lock', () => Parental.setup(context)),
       if (xtream) (S.profile, 'ic_profile', () => go(context, const ProfilePage())),
+      (S.speed_test, 'ic_speed', () => go(context, const SpeedTestPage())),
       (S.feedback, 'ic_feedback', () => feedbackDialog(context, 'Feedback')),
       (S.privacy_policy, 'ic_shield_keyhole', openPrivacy),
       (S.terms_and_conditions, 'ic_todo', openTerms),
       (S.about, 'ic_information', () => go(context, const _AboutPage())),
     ];
+    // AdapterSetting: 4 columns as wide as a quarter of the screen, 60% as
+    // high, with a 3sdp margin round each card.
+    final tileH = MediaQuery.sizeOf(context).width / 4 * 0.6;
     return PageBg(
       child: Padding(
         padding: EdgeInsets.all(5.sdp),
@@ -47,56 +67,51 @@ class SettingsPage extends StatelessWidget {
             PageTop(title: S.settings, icon: 'ic_setting'),
             SizedBox(height: 5.sdp),
             Expanded(
-              child: Builder(
-                builder: (context) {
-                  // 4 columns of 90sdp square cards, like SettingActivity.
-                  return GridView.builder(
-                    padding: EdgeInsets.symmetric(horizontal: 10.sdp),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4, mainAxisExtent: 100.sdp),
-                    itemCount: items.length,
-                    itemBuilder: (_, i) {
-                      final (name, icon, onTap) = items[i];
-                      return Center(
-                        child: SizedBox(
-                          width: 90.sdp,
-                          height: 90.sdp,
-                          child: Tap(
-                            onTap: onTap,
-                            builder: (f) => SaveBox(
-                              focused: f,
-                              padding: EdgeInsets.all(1.sdp),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(2.sdp),
-                                child: Stack(
-                                  fit: StackFit.expand,
-                                  children: [
-                                    Image.asset('assets/img/card_bg.webp', fit: BoxFit.cover),
-                                    Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Ic(icon, size: 30.sdp, color: C.title),
-                                        SizedBox(height: 5.sdp),
-                                        Padding(
-                                          padding: EdgeInsets.symmetric(horizontal: 4.sdp),
-                                          child: T(
-                                            name,
-                                            size: 9,
-                                            color: C.title,
-                                            weight: FontWeight.bold,
-                                            lines: 2,
-                                            align: TextAlign.center,
-                                          ),
-                                        ),
-                                      ],
+              child: GridView.builder(
+                padding: EdgeInsets.only(bottom: 20.sdp),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4,
+                  mainAxisExtent: tileH + 6.sdp,
+                ),
+                itemCount: items.length,
+                itemBuilder: (_, i) {
+                  final (name, icon, onTap) = items[i];
+                  return Padding(
+                    padding: EdgeInsets.all(3.sdp),
+                    child: Tap(
+                      onTap: onTap,
+                      builder: (f) => SaveBox(
+                        focused: f,
+                        padding: EdgeInsets.all(1.sdp),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(2.sdp),
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              Image.asset('assets/img/card_bg.webp', fit: BoxFit.cover),
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Ic(icon, size: 30.sdp, color: C.title),
+                                  SizedBox(height: 5.sdp),
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 5.sdp),
+                                    child: T(
+                                      name,
+                                      size: 9,
+                                      color: C.title,
+                                      weight: FontWeight.bold,
+                                      lines: 2,
+                                      align: TextAlign.center,
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                            ),
+                            ],
                           ),
                         ),
-                      );
-                    },
+                      ),
+                    ),
                   );
                 },
               ),
@@ -109,11 +124,30 @@ class SettingsPage extends StatelessWidget {
 }
 
 /// Common frame of the sub settings: title, SAVE button, bordered card.
-class _SettingFrame extends StatelessWidget {
+/// SAVE shows a spinner for half a second, then the "Save Data" toast, and
+/// the page stays open like the Android activities.
+class _SettingFrame extends StatefulWidget {
   final String title;
-  final VoidCallback? onSave;
+  final FutureOr<void> Function()? onSave;
   final Widget child;
   const _SettingFrame({required this.title, this.onSave, required this.child});
+  @override
+  State<_SettingFrame> createState() => _SettingFrameState();
+}
+
+class _SettingFrameState extends State<_SettingFrame> {
+  bool _saving = false;
+
+  Future<void> _save() async {
+    if (_saving) return;
+    setState(() => _saving = true);
+    await widget.onSave!();
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
+    setState(() => _saving = false);
+    toast(context, 'Save Data');
+  }
+
   @override
   Widget build(BuildContext context) => PageBg(
     child: Padding(
@@ -123,28 +157,14 @@ class _SettingFrame extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: PageTop(title: title, icon: 'ic_setting'),
+                child: PageTop(title: widget.title, icon: 'ic_setting'),
               ),
-              if (onSave != null)
-                Tap(
-                  onTap: onSave,
-                  builder: (f) => SaveBox(
-                    focused: f,
-                    padding: EdgeInsets.only(right: 10.sdp),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Ic('ic_save', size: 30.sdp, pad: 7.sdp),
-                        T(S.save, size: 12),
-                      ],
-                    ),
-                  ),
-                ),
+              if (widget.onSave != null) _SaveButton(text: S.save, icon: 'ic_save', busy: _saving, onTap: _save),
             ],
           ),
           SizedBox(height: 5.sdp),
           Expanded(
-            child: Container(width: double.infinity, decoration: cardSub(), child: child),
+            child: Container(width: double.infinity, decoration: cardSub(), child: widget.child),
           ),
         ],
       ),
@@ -152,7 +172,47 @@ class _SettingFrame extends StatelessWidget {
   );
 }
 
-/// CheckBox row (focused_edt look).
+/// ll_btn_save / btn_select: icon (or spinner) then text, focused_save_btn.
+class _SaveButton extends StatelessWidget {
+  final String text;
+  final String icon;
+  final bool busy;
+  final VoidCallback onTap;
+  final double iconPad;
+  const _SaveButton({
+    required this.text,
+    required this.icon,
+    required this.busy,
+    required this.onTap,
+    this.iconPad = 7,
+  });
+  @override
+  Widget build(BuildContext context) => Tap(
+    onTap: onTap,
+    builder: (f) => SaveBox(
+      focused: f,
+      padding: EdgeInsets.only(right: 10.sdp),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 35.sdp,
+            height: 30.sdp,
+            child: busy
+                ? Padding(
+                    padding: EdgeInsets.all(8.sdp),
+                    child: const CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                : Ic(icon, size: 30.sdp, pad: iconPad.sdp),
+          ),
+          T(text, size: 12),
+        ],
+      ),
+    ),
+  );
+}
+
+/// CheckBox row (focused_edt background, white button tint).
 class _Check extends StatelessWidget {
   final String text;
   final bool value;
@@ -163,16 +223,11 @@ class _Check extends StatelessWidget {
     onTap: () => onChanged(!value),
     builder: (f) => Container(
       padding: EdgeInsets.all(6.sdp),
-      margin: EdgeInsets.only(bottom: 5.sdp),
       decoration: BoxDecoration(color: f ? const Color(0x2DFFFFFF) : null, borderRadius: BorderRadius.circular(2.sdp)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            value ? Icons.check_box : Icons.check_box_outline_blank,
-            color: value ? C.primary : Colors.white70,
-            size: 20.sdp,
-          ),
+          Icon(value ? Icons.check_box : Icons.check_box_outline_blank, color: Colors.white, size: 20.sdp),
           SizedBox(width: 8.sdp),
           Flexible(child: T(text, size: 12, color: C.title)),
         ],
@@ -181,39 +236,42 @@ class _Check extends StatelessWidget {
   );
 }
 
-/// RadioButton row.
-class _Radio extends StatelessWidget {
-  final String text;
-  final bool selected;
+/// A "label  value  ⌄" row that opens a radio dialog (ll_recently_movie,
+/// ll_auto_update).
+class _DropRow extends StatelessWidget {
+  final String label;
+  final String value;
   final VoidCallback onTap;
-  const _Radio(this.text, this.selected, this.onTap);
+  const _DropRow(this.label, this.value, this.onTap);
   @override
-  Widget build(BuildContext context) => Tap(
-    onTap: onTap,
-    builder: (f) => Container(
-      padding: EdgeInsets.all(10.sdp),
-      color: f ? const Color(0x2DFFFFFF) : null,
-      child: Row(
-        children: [
-          Icon(
-            selected ? Icons.radio_button_checked : Icons.radio_button_off,
-            color: selected ? C.select : Colors.white70,
-            size: 18.sdp,
-          ),
-          SizedBox(width: 10.sdp),
-          T(text, size: 13, color: C.title),
-        ],
+  Widget build(BuildContext context) => Padding(
+    padding: EdgeInsets.only(top: 5.sdp),
+    child: Tap(
+      onTap: onTap,
+      builder: (f) => Container(
+        padding: EdgeInsets.all(5.sdp),
+        decoration: BoxDecoration(
+          color: f ? const Color(0x2DFFFFFF) : null,
+          borderRadius: BorderRadius.circular(2.sdp),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(child: T(label, size: 12)),
+            SizedBox(width: 10.sdp),
+            T(value, size: 12, color: C.titleSub),
+            SizedBox(width: 2.sdp),
+            Ic('ic_round_arrow_down', size: 20.sdp),
+            SizedBox(width: 5.sdp),
+          ],
+        ),
       ),
     ),
   );
 }
 
-void _saved(BuildContext context) {
-  toast(context, 'Saved');
-  Navigator.maybePop(context);
-}
-
-/// A list of radio choices with a SAVE button.
+/// A list of radio choices with a SAVE button (RadioGroup 30sdp from the
+/// left, centred vertically).
 class _ChoicePage extends StatefulWidget {
   final String title;
   final List<String> options;
@@ -229,19 +287,20 @@ class _ChoicePageState extends State<_ChoicePage> {
   @override
   Widget build(BuildContext context) => _SettingFrame(
     title: widget.title,
-    onSave: () {
-      widget.onSave(_v);
-      _saved(context);
-    },
-    child: Center(
-      child: SizedBox(
-        width: 300.sdp,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (var i = 0; i < widget.options.length; i++)
-              _Radio(widget.options[i], i == _v, () => setState(() => _v = i)),
-          ],
+    onSave: () => widget.onSave(_v),
+    child: Align(
+      alignment: Alignment.centerLeft,
+      child: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(horizontal: 30.sdp),
+        child: IntrinsicWidth(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < widget.options.length; i++)
+                RadioRow(widget.options[i], i == _v, () => setState(() => _v = i)),
+            ],
+          ),
         ),
       ),
     ),
@@ -281,29 +340,126 @@ class _PlayerPage extends StatelessWidget {
   );
 }
 
-class _AutomationPage extends StatelessWidget {
+/// SettingAutomationActivity: which sections the start-up refresh updates,
+/// and after how many hours.
+class _AutomationPage extends StatefulWidget {
   const _AutomationPage();
-  static const hours = [0, 5, 12, 24, 48];
   @override
-  Widget build(BuildContext context) => _ChoicePage(
-    title: '${S.automation} (auto update data)',
-    options: const ['Off', 'Every 5 hours', 'Every 12 hours', 'Every day', 'Every 2 days'],
-    initial: hours.indexOf(Store.autoUpdateHours).clamp(0, hours.length - 1),
-    onSave: (v) => Store.autoUpdateHours = hours[v],
+  State<_AutomationPage> createState() => _AutomationPageState();
+}
+
+class _AutomationPageState extends State<_AutomationPage> {
+  bool _live = Store.updateLive;
+  bool _movies = Store.updateMovies;
+  bool _series = Store.updateSeries;
+  int _hours = Store.autoUpdateHours;
+
+  Future<void> _pickHours() async {
+    final r = await radioBtnDialog(
+      context,
+      title: S.select_reload_hours,
+      options: [
+        for (final h in const [1, 3, 4, 5, 7, 10]) (h, '$h Hours'),
+      ],
+      selected: Store.autoUpdateHours,
+    );
+    if (r == null || !mounted) return;
+    toast(context, 'Changed hours ($r)');
+    setState(() => _hours = r);
+  }
+
+  @override
+  Widget build(BuildContext context) => _SettingFrame(
+    title: S.automation,
+    onSave: () {
+      Store.updateLive = _live;
+      Store.updateMovies = _movies;
+      Store.updateSeries = _series;
+      Store.autoUpdateHours = _hours;
+    },
+    child: SingleChildScrollView(
+      padding: EdgeInsets.all(20.sdp),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _Check(S.auto_update_live, _live, (v) => setState(() => _live = v)),
+          _Check(S.auto_update_movies, _movies, (v) => setState(() => _movies = v)),
+          _Check(S.auto_update_series, _series, (v) => setState(() => _series = v)),
+          _DropRow(S.auto_reload_data, '$_hours Hours', _pickHours),
+        ],
+      ),
+    ),
   );
 }
 
-class _MultiScreenSetting extends StatelessWidget {
+/// SettingMultiScreenActivity: "Show Multi-Screen Popup" and the saved layout.
+class _MultiScreenSetting extends StatefulWidget {
   const _MultiScreenSetting();
   @override
-  Widget build(BuildContext context) => _ChoicePage(
-    title: S.multiple_screen,
-    options: const ['Ask every time', 'Screen 1', 'Screen 2', 'Screen 3', 'Screen 4', 'Screen 5'],
-    initial: Store.prefs.getInt('multi_screen') ?? 0,
-    onSave: (v) => Store.prefs.setInt('multi_screen', v),
-  );
+  State<_MultiScreenSetting> createState() => _MultiScreenSettingState();
 }
 
+class _MultiScreenSettingState extends State<_MultiScreenSetting> {
+  bool _popup = Store.multiScreenPopup;
+  bool _busy = false;
+
+  Future<void> _select() async {
+    final r = await screenDialog(context);
+    if (r == null || !mounted) return;
+    Store.multiScreenLayout = r;
+    setState(() => _busy = true);
+    await Future<void>.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
+    setState(() => _busy = false);
+    toast(context, 'Changed screen');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const names = ['one', 'two', 'three', 'four', 'five'];
+    final n = Store.multiScreenLayout.clamp(1, 5);
+    return _SettingFrame(
+      title: S.multi_screen_settings,
+      onSave: () => Store.multiScreenPopup = _popup,
+      child: Padding(
+        padding: EdgeInsets.all(25.sdp),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _Check(S.show_multi_screen_popup, _popup, (v) => setState(() => _popup = v)),
+            const Spacer(),
+            Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 5.sdp, top: 2.sdp),
+                    child: T(S.choose_multi_screen_layout, size: 12),
+                  ),
+                ),
+                Expanded(
+                  child: Row(
+                    children: [
+                      _SaveButton(text: S.select, icon: 'ic_add_circle', iconPad: 8, busy: _busy, onTap: _select),
+                      SizedBox(width: 10.sdp),
+                      Image.asset(
+                        'assets/img/screen_${names[n - 1]}.webp',
+                        width: 60.sdp,
+                        height: 40.sdp,
+                        fit: BoxFit.contain,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// SettingGeneralActivity: two columns split by a thin line.
 class _GeneralPage extends StatefulWidget {
   const _GeneralPage();
   @override
@@ -311,25 +467,100 @@ class _GeneralPage extends StatefulWidget {
 }
 
 class _GeneralPageState extends State<_GeneralPage> {
+  final _playlist = Store.currentAccount?.type == AccountType.playlist;
   bool _autoplay = Store.autoplayNext;
   bool _reverse = Store.prefs.getBool('cat_reverse') ?? false;
+  bool _audio = Store.splashAudio;
+  int _movieLimit = Store.movieLimit;
+  int _liveLimit = Store.liveLimit;
+  final _agent = TextEditingController(text: Store.agentName);
+
+  @override
+  void dispose() {
+    _agent.dispose();
+    super.dispose();
+  }
+
+  Future<int?> _pickLimit(int current) async {
+    final r = await radioBtnDialog(
+      context,
+      title: S.select_recently_limit,
+      options: [
+        for (final n in const [10, 20, 30, 40, 50, 55]) (n, '$n Lists'),
+      ],
+      selected: current,
+    );
+    if (r != null && mounted) toast(context, 'Changed limit ($r)');
+    return r;
+  }
+
   @override
   Widget build(BuildContext context) => _SettingFrame(
     title: S.general_setting,
     onSave: () {
-      Store.autoplayNext = _autoplay;
+      Store.agentName = _agent.text.trim();
+      if (!_playlist) Store.autoplayNext = _autoplay;
       Store.prefs.setBool('cat_reverse', _reverse);
-      _saved(context);
+      Store.splashAudio = _audio;
+      Store.liveLimit = _liveLimit;
+      Store.movieLimit = _movieLimit;
     },
-    child: SingleChildScrollView(
-      padding: EdgeInsets.all(20.sdp),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _Check(S.autoplay_next_episode, _autoplay, (v) => setState(() => _autoplay = v)),
-          _Check(S.categories_reverse_order, _reverse, (v) => setState(() => _reverse = v)),
-        ],
-      ),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          flex: 16,
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(20.sdp),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (!_playlist) _Check(S.autoplay_next_episode, _autoplay, (v) => setState(() => _autoplay = v)),
+                Padding(
+                  padding: EdgeInsets.only(top: _playlist ? 0 : 5.sdp),
+                  child: _Check(S.categories_reverse_order, _reverse, (v) => setState(() => _reverse = v)),
+                ),
+                if (!_playlist) ...[
+                  _DropRow(S.recently_added_limit_movie_series, '$_movieLimit', () async {
+                    final r = await _pickLimit(_movieLimit);
+                    if (r != null) setState(() => _movieLimit = r);
+                  }),
+                  _DropRow(S.recently_added_limit_live_tv, '$_liveLimit', () async {
+                    final r = await _pickLimit(_liveLimit);
+                    if (r != null) setState(() => _liveLimit = r);
+                  }),
+                ],
+                Padding(
+                  padding: EdgeInsets.fromLTRB(5.sdp, 10.sdp, 3.sdp, 3.sdp),
+                  child: T(S.set_playlist_agent, size: 12, color: C.titleSub),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 5.sdp),
+                  child: SizedBox(
+                    width: 240.sdp,
+                    child: PillField(icon: 'ic_profile', hint: S.app_name, controller: _agent),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Container(
+          width: 1.sdp,
+          margin: EdgeInsets.symmetric(vertical: 1.sdp),
+          color: const Color(0x12FFFFFF),
+        ),
+        Expanded(
+          flex: 10,
+          child: Padding(
+            padding: EdgeInsets.all(20.sdp),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [_Check(S.splash_screen_music, _audio, (v) => setState(() => _audio = v))],
+            ),
+          ),
+        ),
+      ],
     ),
   );
 }
@@ -349,7 +580,6 @@ class _UiPageState extends State<_UiPage> {
     onSave: () {
       Store.showCardTitle = _title;
       Store.showDownload = _download;
-      _saved(context);
     },
     child: SingleChildScrollView(
       padding: EdgeInsets.all(20.sdp),
@@ -379,7 +609,6 @@ class _DownloadPageState extends State<_DownloadPage> {
     onSave: () {
       Store.prefs.setBool('dl_wifi', _wifi);
       Store.prefs.setBool('dl_mobile', _mobile);
-      _saved(context);
     },
     child: SingleChildScrollView(
       padding: EdgeInsets.all(20.sdp),

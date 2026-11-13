@@ -9,7 +9,10 @@ import 'list_page.dart';
 
 class SearchPage extends StatefulWidget {
   final ContentType type;
-  const SearchPage({super.key, required this.type});
+
+  /// Multiscreen channel picker: a tap returns the item.
+  final bool pick;
+  const SearchPage({super.key, required this.type, this.pick = false});
   @override
   State<SearchPage> createState() => _SearchPageState();
 }
@@ -94,8 +97,12 @@ class _SearchPageState extends State<SearchPage> {
                         childAspectRatio: live ? 1 : 1 / 1.15,
                       ),
                       itemCount: _res!.length,
-                      itemBuilder: (context, i) =>
-                          PosterCard(item: _res![i], live: live, onTap: () => openItem(context, _res![i], _res!)),
+                      itemBuilder: (context, i) => PosterCard(
+                        item: _res![i],
+                        live: live,
+                        onTap: () =>
+                            widget.pick ? Navigator.pop(context, _res![i]) : openItem(context, _res![i], _res!),
+                      ),
                     ),
             ),
           ],

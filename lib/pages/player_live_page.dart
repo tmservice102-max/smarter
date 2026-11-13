@@ -309,7 +309,7 @@ class _PlayerLivePageState extends State<PlayerLivePage> {
                       }),
                     ),
                     _action('ic_multiple_screen', S.multiple_screen, () {
-                      go(context, const MultiScreenPage(), replace: true);
+                      go(context, MultiScreenPage(first: ch), replace: true);
                     }),
                     _action('ic_crop', '${S.aspect_ratio} (${fitLabel(playerFits[_fit])})', () {
                       setState(() => _fit = (_fit + 1) % playerFits.length);
