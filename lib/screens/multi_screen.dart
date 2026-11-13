@@ -1,3 +1,4 @@
+import '../orientation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
@@ -41,7 +42,7 @@ class _MultiScreenState extends State<MultiScreen> {
       c.player.dispose();
     }
     WakelockPlus.disable();
-    SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+    restoreOrientation();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }

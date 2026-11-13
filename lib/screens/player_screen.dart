@@ -1,3 +1,4 @@
+import '../orientation.dart';
 import 'dart:async';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
@@ -85,7 +86,19 @@ class _PlayerScreenState extends State<PlayerScreen> {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
     _subs.add(_player.stream.error.listen((e) {
-      if (mounted && e.isNotEmpty) setState(() => _error = 'Could not play this stream.');
+      if (!mounted || e.isEmpty) return;
+      // media_kit also reports minor errors (a bad track, a dropped segment)
+      // while the video keeps playing. Only show the overlay if playback
+      // really did not start.
+      Future.delayed(const Duration(seconds: 3), () {
+        if (!mounted) return;
+        final st = _player.state;
+        final playing = st.playing && (st.width ?? 0) > 0 || st.position > Duration.zero;
+        if (!playing) setState(() => _error = 'Could not play this stream.');
+      });
+    }));
+    _subs.add(_player.stream.position.listen((p) {
+      if (_error != null && p > Duration.zero && mounted) setState(() => _error = null);
     }));
     _subs.add(_player.stream.completed.listen((done) {
       if (done && widget.mode == PlayerMode.episodes && Store.autoplayNext) {
@@ -183,7 +196,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
     }
     _player.dispose();
     WakelockPlus.disable();
-    SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+    restoreOrientation();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     super.dispose();
   }
