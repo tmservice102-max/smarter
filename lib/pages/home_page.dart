@@ -1,6 +1,8 @@
 // Home dashboard (OneUIActivity / activity_themes_one_ui.xml).
 import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
+
 import '../api/source.dart';
 import '../library.dart';
 import '../models.dart';
@@ -29,7 +31,20 @@ String greeting() {
   return S.title_good_night;
 }
 
-const _months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const _months = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
 const _days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const _mon = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -51,8 +66,7 @@ Future<void> refreshAccountInfo() async {
     final info = await ContentSource.forAccount(a).accountInfo();
     if (info != null) {
       await Store.prefs.setInt('exp|${a.id}', info.expires?.millisecondsSinceEpoch ?? 0);
-      await Store.prefs.setString('info|${a.id}',
-          '${info.status}|${info.maxConnections}|${info.activeConnections}');
+      await Store.prefs.setString('info|${a.id}', '${info.status}|${info.maxConnections}|${info.activeConnections}');
     }
   } catch (_) {}
 }
@@ -115,7 +129,12 @@ mixin HomeActions<W extends StatefulWidget> on State<W> {
       go(context, page);
       return;
     }
-    final ok = await appDialog(context, icon: 'ic_file_download', title: S.live_not_downloaded, msg: S.want_to_download);
+    final ok = await appDialog(
+      context,
+      icon: 'ic_file_download',
+      title: S.live_not_downloaded,
+      msg: S.want_to_download,
+    );
     if (ok) downloadSection(ContentType.live);
   }
 }
@@ -158,23 +177,25 @@ class _HomePageState extends State<HomePage> with HomeActions {
       context: context,
       builder: (ctx) => Dialog(
         backgroundColor: Colors.transparent,
-        child: Stack(children: [
-          GestureDetector(
-            onTap: () {
-              Navigator.pop(ctx);
-              if (ad['type'] == 'external') {
-                openExternal(ad['url']!);
-              } else {
-                openWeb(ad['url']!);
-              }
-            },
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(6.sdp),
-              child: NetImg(ad['image']!, placeholder: 'placeholder_horizontal', fit: BoxFit.contain),
+        child: Stack(
+          children: [
+            GestureDetector(
+              onTap: () {
+                Navigator.pop(ctx);
+                if (ad['type'] == 'external') {
+                  openExternal(ad['url']!);
+                } else {
+                  openWeb(ad['url']!);
+                }
+              },
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(6.sdp),
+                child: NetImg(ad['image']!, placeholder: 'placeholder_horizontal', fit: BoxFit.contain),
+              ),
             ),
-          ),
-          Positioned(right: 4, top: 4, child: IconTap('ic_close', onTap: () => Navigator.pop(ctx))),
-        ]),
+            Positioned(right: 4, top: 4, child: IconTap('ic_close', onTap: () => Navigator.pop(ctx))),
+          ],
+        ),
       ),
     );
   }
@@ -187,124 +208,156 @@ class _HomePageState extends State<HomePage> with HomeActions {
     return PageBg(
       child: Padding(
         padding: EdgeInsets.all(5.sdp),
-        child: Column(children: [
-          // Top bar
-          Expanded(
-            flex: 4,
-            child: Row(children: [
-              Logo(size: 30.sdp),
-              SizedBox(width: 10.sdp),
-              T(S.app_name, size: 16),
-              Expanded(child: T(shortDate(DateTime.now()), size: 11, align: TextAlign.center, lines: 1)),
-              Ic('ic_wifi', size: 35.sdp, pad: 8.sdp),
-              IconTap('ic_round_notifications', onTap: () => go(context, const NotificationsPage())),
-              if (app?.download ?? true) IconTap('iv_downloading', onTap: () => go(context, const DownloadsPage())),
-              if (app?.radio ?? false) IconTap('ic_radio', onTap: () => needLive(const RadioPage())),
-              IconTap('ic_outline_person', pad: 7, onTap: () => go(context, const ProfilePage())),
-              IconTap('ic_people', pad: 6, onTap: () => signOut(context)),
-              IconTap('ic_player_setting', onTap: () => go(context, const SettingsPage()).then((_) {
-                    if (mounted) setState(() {});
-                  })),
-            ]),
-          ),
-          SizedBox(height: 3.sdp),
-          // Tiles
-          Expanded(
-            flex: 20,
-            child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              Expanded(
-                child: BigTile(
-                  gradient: G.tv,
-                  icon: 'ic_tv',
-                  iconSize: 60,
-                  title: S.live_tv_home,
-                  titleSize: 19,
-                  type: ContentType.live,
-                  progress: progress[ContentType.live],
-                  onTap: () => openSection(ContentType.live),
-                  onRenew: () => lib.has(ContentType.live) ? reloadSection(ContentType.live) : downloadSection(ContentType.live),
-                ),
-              ),
-              Expanded(
-                flex: 2,
-                child: Column(children: [
-                  Expanded(
-                    flex: 20,
-                    child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                      SizedBox(width: 10.sdp),
-                      Expanded(
-                        child: BigTile(
-                          gradient: G.movies,
-                          icon: 'ic_movie',
-                          iconSize: 50,
-                          title: S.movies_home,
-                          titleSize: 15,
-                          type: ContentType.movie,
-                          progress: progress[ContentType.movie],
-                          onTap: () => openSection(ContentType.movie),
-                          onRenew: () =>
-                              lib.has(ContentType.movie) ? reloadSection(ContentType.movie) : downloadSection(ContentType.movie),
-                        ),
-                      ),
-                      SizedBox(width: 10.sdp),
-                      Expanded(
-                        child: BigTile(
-                          gradient: G.series,
-                          icon: 'ic_series',
-                          iconSize: 50,
-                          title: S.series_home,
-                          titleSize: 15,
-                          type: ContentType.series,
-                          progress: progress[ContentType.series],
-                          onTap: () => openSection(ContentType.series),
-                          onRenew: () =>
-                              lib.has(ContentType.series) ? reloadSection(ContentType.series) : downloadSection(ContentType.series),
-                        ),
-                      ),
-                    ]),
+        child: Column(
+          children: [
+            // Top bar
+            Expanded(
+              flex: 4,
+              child: Row(
+                children: [
+                  Logo(size: 30.sdp),
+                  SizedBox(width: 10.sdp),
+                  T(S.app_name, size: 16),
+                  Expanded(child: T(shortDate(DateTime.now()), size: 11, align: TextAlign.center, lines: 1)),
+                  Ic('ic_wifi', size: 35.sdp, pad: 8.sdp),
+                  IconTap('ic_round_notifications', onTap: () => go(context, const NotificationsPage())),
+                  if (app?.download ?? true) IconTap('iv_downloading', onTap: () => go(context, const DownloadsPage())),
+                  if (app?.radio ?? false) IconTap('ic_radio', onTap: () => needLive(const RadioPage())),
+                  IconTap('ic_outline_person', pad: 7, onTap: () => go(context, const ProfilePage())),
+                  IconTap('ic_people', pad: 6, onTap: () => signOut(context)),
+                  IconTap(
+                    'ic_player_setting',
+                    onTap: () => go(context, const SettingsPage()).then((_) {
+                      if (mounted) setState(() {});
+                    }),
                   ),
-                  SizedBox(height: 10.sdp),
-                  Expanded(
-                    flex: 7,
-                    child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                      SizedBox(width: 10.sdp),
-                      Expanded(
-                          child: SmallTile(
-                              icon: 'ic_note',
-                              title: S.live_with_epg_home,
-                              dim: !lib.has(ContentType.live) || progress[ContentType.live] != null,
-                              onTap: () => needLive(const EpgCategoriesPage()))),
-                      SizedBox(width: 10.sdp),
-                      Expanded(
-                          child: SmallTile(
-                              icon: 'ic_multiple_screen',
-                              title: S.multiple_screen,
-                              dim: !lib.has(ContentType.live) || progress[ContentType.live] != null,
-                              onTap: () => needLive(const MultiScreenPage()))),
-                      SizedBox(width: 10.sdp),
-                      Expanded(
-                          child: SmallTile(
-                              icon: 'ic_timer_start',
-                              title: S.catch_up_home,
-                              dim: !lib.has(ContentType.live) || progress[ContentType.live] != null,
-                              onTap: () => needLive(const CatchUpPage()))),
-                    ]),
-                  ),
-                ]),
+                ],
               ),
-            ]),
-          ),
-          // Bottom line
-          Expanded(
-            flex: 3,
-            child: Row(children: [
-              T('${S.expiration} ${exp == null ? (a?.type == AccountType.xtream ? 'Unlimited' : '') : longDate(exp)}',
-                  size: 12),
-              const Spacer(),
-              T('${greeting()} ${a?.name ?? ''}', size: 12, lines: 1),
-            ]),
-          ),
-        ]),
+            ),
+            SizedBox(height: 3.sdp),
+            // Tiles
+            Expanded(
+              flex: 20,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: BigTile(
+                      gradient: G.tv,
+                      icon: 'ic_tv',
+                      iconSize: 60,
+                      title: S.live_tv_home,
+                      titleSize: 19,
+                      type: ContentType.live,
+                      progress: progress[ContentType.live],
+                      onTap: () => openSection(ContentType.live),
+                      onRenew: () => lib.has(ContentType.live)
+                          ? reloadSection(ContentType.live)
+                          : downloadSection(ContentType.live),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Column(
+                      children: [
+                        Expanded(
+                          flex: 20,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              SizedBox(width: 10.sdp),
+                              Expanded(
+                                child: BigTile(
+                                  gradient: G.movies,
+                                  icon: 'ic_movie',
+                                  iconSize: 50,
+                                  title: S.movies_home,
+                                  titleSize: 15,
+                                  type: ContentType.movie,
+                                  progress: progress[ContentType.movie],
+                                  onTap: () => openSection(ContentType.movie),
+                                  onRenew: () => lib.has(ContentType.movie)
+                                      ? reloadSection(ContentType.movie)
+                                      : downloadSection(ContentType.movie),
+                                ),
+                              ),
+                              SizedBox(width: 10.sdp),
+                              Expanded(
+                                child: BigTile(
+                                  gradient: G.series,
+                                  icon: 'ic_series',
+                                  iconSize: 50,
+                                  title: S.series_home,
+                                  titleSize: 15,
+                                  type: ContentType.series,
+                                  progress: progress[ContentType.series],
+                                  onTap: () => openSection(ContentType.series),
+                                  onRenew: () => lib.has(ContentType.series)
+                                      ? reloadSection(ContentType.series)
+                                      : downloadSection(ContentType.series),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 10.sdp),
+                        Expanded(
+                          flex: 7,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              SizedBox(width: 10.sdp),
+                              Expanded(
+                                child: SmallTile(
+                                  icon: 'ic_note',
+                                  title: S.live_with_epg_home,
+                                  dim: !lib.has(ContentType.live) || progress[ContentType.live] != null,
+                                  onTap: () => needLive(const EpgCategoriesPage()),
+                                ),
+                              ),
+                              SizedBox(width: 10.sdp),
+                              Expanded(
+                                child: SmallTile(
+                                  icon: 'ic_multiple_screen',
+                                  title: S.multiple_screen,
+                                  dim: !lib.has(ContentType.live) || progress[ContentType.live] != null,
+                                  onTap: () => needLive(const MultiScreenPage()),
+                                ),
+                              ),
+                              SizedBox(width: 10.sdp),
+                              Expanded(
+                                child: SmallTile(
+                                  icon: 'ic_timer_start',
+                                  title: S.catch_up_home,
+                                  dim: !lib.has(ContentType.live) || progress[ContentType.live] != null,
+                                  onTap: () => needLive(const CatchUpPage()),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Bottom line
+            Expanded(
+              flex: 3,
+              child: Row(
+                children: [
+                  T(
+                    '${S.expiration} ${exp == null ? (a?.type == AccountType.xtream ? 'Unlimited' : '') : longDate(exp)}',
+                    size: 12,
+                  ),
+                  const Spacer(),
+                  T('${greeting()} ${a?.name ?? ''}', size: 12, lines: 1),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -348,75 +401,96 @@ class BigTile extends StatelessWidget {
           foregroundDecoration: f
               ? BoxDecoration(
                   borderRadius: BorderRadius.circular(4.sdp),
-                  border: Border.all(color: Colors.white, width: 3.sdp))
+                  border: Border.all(color: Colors.white, width: 3.sdp),
+                )
               : null,
-          child: Stack(fit: StackFit.expand, children: [
-            const Positioned.fill(child: TilePattern()),
-            Center(
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                Ic(icon, size: iconSize.sdp),
-                SizedBox(height: 4.sdp),
-                T(title, size: titleSize, weight: FontWeight.bold),
-              ]),
-            ),
-            // count badge
-            Positioned(
-              top: 4.sdp,
-              right: 4.sdp,
-              child: SaveBox(
-                padding: EdgeInsets.fromLTRB(4.sdp, 2.sdp, 4.sdp, 3.sdp),
-                child: T(shortCount(lib.count(type)), size: 8, weight: FontWeight.bold),
-              ),
-            ),
-            // last updated / download pill
-            Positioned(
-              left: 10.sdp,
-              right: 10.sdp,
-              bottom: 10.sdp,
-              height: 30.sdp,
-              child: GestureDetector(
-                onTap: onRenew,
-                child: Container(
-                  decoration: BoxDecoration(color: const Color(0x4D000000), borderRadius: BorderRadius.circular(10.sdp)),
-                  child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    if (has)
-                      Flexible(
-                        child: Padding(
-                          padding: EdgeInsets.only(left: 5.sdp),
-                          child: T('${S.last_updated} ${timeSpan(lib.updated(type))}', size: 7, lines: 1),
-                        ),
-                      ),
-                    SizedBox(width: 5.sdp),
-                    Container(
-                      width: 25.sdp,
-                      height: 20.sdp,
-                      padding: EdgeInsets.all(2.sdp),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10.sdp),
-                        border: Border.all(color: const Color(0x79494949), width: 1.sdp),
-                      ),
-                      child: Ic(has ? 'ic_repeate' : 'ic_file_download', size: 16.sdp, color: Colors.black),
-                    ),
-                  ]),
-                ),
-              ),
-            ),
-            if (!has || progress != null) const ColoredBox(color: Color(0xB3000000)),
-            if (progress != null)
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              const Positioned.fill(child: TilePattern()),
               Center(
-                child: SizedBox(
-                  width: 50.sdp,
-                  height: 50.sdp,
-                  child: Stack(alignment: Alignment.center, children: [
-                    SizedBox.expand(
-                        child: CircularProgressIndicator(
-                            value: progress, color: Colors.white, strokeWidth: 3, backgroundColor: Colors.white24)),
-                    T('${((progress ?? 0) * 100).round()}%', size: 9),
-                  ]),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Ic(icon, size: iconSize.sdp),
+                    SizedBox(height: 4.sdp),
+                    T(title, size: titleSize, weight: FontWeight.bold),
+                  ],
                 ),
               ),
-          ]),
+              // count badge
+              Positioned(
+                top: 4.sdp,
+                right: 4.sdp,
+                child: SaveBox(
+                  padding: EdgeInsets.fromLTRB(4.sdp, 2.sdp, 4.sdp, 3.sdp),
+                  child: T(shortCount(lib.count(type)), size: 8, weight: FontWeight.bold),
+                ),
+              ),
+              // last updated / download pill
+              Positioned(
+                left: 10.sdp,
+                right: 10.sdp,
+                bottom: 10.sdp,
+                height: 30.sdp,
+                child: GestureDetector(
+                  onTap: onRenew,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0x4D000000),
+                      borderRadius: BorderRadius.circular(10.sdp),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (has)
+                          Flexible(
+                            child: Padding(
+                              padding: EdgeInsets.only(left: 5.sdp),
+                              child: T('${S.last_updated} ${timeSpan(lib.updated(type))}', size: 7, lines: 1),
+                            ),
+                          ),
+                        SizedBox(width: 5.sdp),
+                        Container(
+                          width: 25.sdp,
+                          height: 20.sdp,
+                          padding: EdgeInsets.all(2.sdp),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10.sdp),
+                            border: Border.all(color: const Color(0x79494949), width: 1.sdp),
+                          ),
+                          child: Ic(has ? 'ic_repeate' : 'ic_file_download', size: 16.sdp, color: Colors.black),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              if (!has || progress != null) const ColoredBox(color: Color(0xB3000000)),
+              if (progress != null)
+                Center(
+                  child: SizedBox(
+                    width: 50.sdp,
+                    height: 50.sdp,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        SizedBox.expand(
+                          child: CircularProgressIndicator(
+                            value: progress,
+                            color: Colors.white,
+                            strokeWidth: 3,
+                            backgroundColor: Colors.white24,
+                          ),
+                        ),
+                        T('${((progress ?? 0) * 100).round()}%', size: 9),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -443,11 +517,14 @@ class SmallTile extends StatelessWidget {
         foregroundDecoration: dim
             ? BoxDecoration(color: const Color(0xB3000000), borderRadius: BorderRadius.circular(5.sdp))
             : null,
-        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Ic(icon, size: 18.sdp),
-          SizedBox(width: 5.sdp),
-          Flexible(child: T(title, size: 10, lines: 1, weight: FontWeight.bold)),
-        ]),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Ic(icon, size: 18.sdp),
+            SizedBox(width: 5.sdp),
+            Flexible(child: T(title, size: 10, lines: 1, weight: FontWeight.bold)),
+          ],
+        ),
       ),
     );
   }

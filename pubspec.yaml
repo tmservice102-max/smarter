@@ -114,9 +114,10 @@ flutter_launcher_icons:
   adaptive_icon_background: "#3C25CB"
   adaptive_icon_foreground: assets/icon.png
 
+# Like the Android app's system splash: round logo on a light background.
 flutter_native_splash:
-  color: "#020309"
-  image: assets/splash.png
+  color: "#FEF7FF"
+  image: assets/splash_round.png
   android_12:
-    color: "#020309"
-    image: assets/splash.png
+    color: "#FEF7FF"
+    image: assets/splash_round.png

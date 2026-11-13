@@ -4,9 +4,11 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
+
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'api/source.dart';
 import 'models.dart';
 import 'store.dart';
@@ -142,7 +144,11 @@ class Library {
         double r(StreamItem i) => double.tryParse(i.rating) ?? 0;
         final seen = <String>{};
         out = [];
-        for (final i in [...Store.recent(t), ...Store.favorites(t), ...([...all]..sort((a, b) => r(b).compareTo(r(a))))]) {
+        for (final i in [
+          ...Store.recent(t),
+          ...Store.favorites(t),
+          ...([...all]..sort((a, b) => r(b).compareTo(r(a)))),
+        ]) {
           if (seen.add(i.id)) out.add(i);
           if (out.length >= 50) break;
         }
@@ -167,23 +173,21 @@ class Library {
 }
 
 void _writeLib(String path, List<Category> cats, List<StreamItem> items) {
-  File(path).writeAsStringSync(jsonEncode({
-    'cats': [for (final c in cats) {'id': c.id, 'n': c.name}],
-    'items': [for (final i in items) i.toJson()],
-  }));
+  File(path).writeAsStringSync(
+    jsonEncode({
+      'cats': [
+        for (final c in cats) {'id': c.id, 'n': c.name},
+      ],
+      'items': [for (final i in items) i.toJson()],
+    }),
+  );
 }
 
 (List<Category>, List<StreamItem>) _readLib(String path) {
   final j = jsonDecode(File(path).readAsStringSync()) as Map<String, dynamic>;
   return (
-    [
-      for (final c in (j['cats'] as List? ?? const []))
-        Category('${c['id']}', '${c['n']}')
-    ],
-    [
-      for (final i in (j['items'] as List? ?? const []))
-        StreamItem.fromJson(Map<String, dynamic>.from(i as Map))
-    ],
+    [for (final c in (j['cats'] as List? ?? const [])) Category('${c['id']}', '${c['n']}')],
+    [for (final i in (j['items'] as List? ?? const [])) StreamItem.fromJson(Map<String, dynamic>.from(i as Map))],
   );
 }
 

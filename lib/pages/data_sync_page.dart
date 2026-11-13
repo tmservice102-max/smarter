@@ -1,5 +1,6 @@
 // Refreshes saved lists on start (DataSyncActivity / activity_data_sync.xml).
 import 'package:material_ui/material_ui.dart';
+
 import '../library.dart';
 import '../models.dart';
 import '../ui/kit.dart';
@@ -53,59 +54,77 @@ class _DataSyncPageState extends State<DataSyncPage> {
   @override
   Widget build(BuildContext context) {
     Widget dot(bool on) => Container(
-        width: 14.sdp,
-        height: 14.sdp,
-        decoration: BoxDecoration(shape: BoxShape.circle, color: on ? C.primary : C.primarySub));
-    Widget line(bool on) => Expanded(flex: 2, child: Container(height: 4.sdp, color: on ? C.primary : C.primarySub));
-    Widget label(String t) => Expanded(flex: 10, child: T(t, size: 12, align: TextAlign.center, weight: FontWeight.bold));
+      width: 14.sdp,
+      height: 14.sdp,
+      decoration: BoxDecoration(shape: BoxShape.circle, color: on ? C.primary : C.primarySub),
+    );
+    Widget line(bool on) => Expanded(
+      flex: 2,
+      child: Container(height: 4.sdp, color: on ? C.primary : C.primarySub),
+    );
+    Widget label(String t) => Expanded(
+      flex: 10,
+      child: T(t, size: 12, align: TextAlign.center, weight: FontWeight.bold),
+    );
     return PageBg(
       child: Padding(
         padding: EdgeInsets.all(5.sdp),
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Logo(size: 40.sdp),
-          SizedBox(height: 15.sdp),
-          SizedBox(
-            width: 55.sdp,
-            height: 55.sdp,
-            child: Stack(alignment: Alignment.center, children: [
-              SizedBox(
-                  width: 54.sdp,
-                  height: 54.sdp,
-                  child: const CircularProgressIndicator(color: C.primary, strokeWidth: 4)),
-              T('$_percent%', size: 12, weight: FontWeight.bold),
-            ]),
-          ),
-          SizedBox(height: 10.sdp),
-          T(S.sync_wait_message, size: 15, align: TextAlign.center, weight: FontWeight.bold),
-          SizedBox(height: 8.sdp),
-          T(_status, size: 11),
-          SizedBox(height: 15.sdp),
-          Padding(
-            padding: EdgeInsets.only(left: 120.sdp, right: 30.sdp),
-            child: Row(children: [
-              label(S.live_tv_home),
-              const Spacer(flex: 3),
-              label(S.movies_home),
-              const Spacer(flex: 3),
-              label(S.series_home),
-            ]),
-          ),
-          SizedBox(height: 10.sdp),
-          Padding(
-            padding: EdgeInsets.only(left: 90.sdp, right: 60.sdp),
-            child: Row(children: [
-              dot(true),
-              line(_stage >= 1),
-              dot(_stage >= 1),
-              line(_stage >= 2),
-              dot(_stage >= 2),
-              line(_stage >= 3),
-              dot(_stage >= 3),
-            ]),
-          ),
-          SizedBox(height: 24.sdp),
-          T(S.sync_footer_note.replaceAll('TV', 'phone'), size: 8),
-        ]),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Logo(size: 40.sdp),
+            SizedBox(height: 15.sdp),
+            SizedBox(
+              width: 55.sdp,
+              height: 55.sdp,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 54.sdp,
+                    height: 54.sdp,
+                    child: const CircularProgressIndicator(color: C.primary, strokeWidth: 4),
+                  ),
+                  T('$_percent%', size: 12, weight: FontWeight.bold),
+                ],
+              ),
+            ),
+            SizedBox(height: 10.sdp),
+            T(S.sync_wait_message, size: 15, align: TextAlign.center, weight: FontWeight.bold),
+            SizedBox(height: 8.sdp),
+            T(_status, size: 11),
+            SizedBox(height: 15.sdp),
+            Padding(
+              padding: EdgeInsets.only(left: 120.sdp, right: 30.sdp),
+              child: Row(
+                children: [
+                  label(S.live_tv_home),
+                  const Spacer(flex: 3),
+                  label(S.movies_home),
+                  const Spacer(flex: 3),
+                  label(S.series_home),
+                ],
+              ),
+            ),
+            SizedBox(height: 10.sdp),
+            Padding(
+              padding: EdgeInsets.only(left: 90.sdp, right: 60.sdp),
+              child: Row(
+                children: [
+                  dot(true),
+                  line(_stage >= 1),
+                  dot(_stage >= 1),
+                  line(_stage >= 2),
+                  dot(_stage >= 2),
+                  line(_stage >= 3),
+                  dot(_stage >= 3),
+                ],
+              ),
+            ),
+            SizedBox(height: 24.sdp),
+            T(S.sync_footer_note.replaceAll('TV', 'phone'), size: 8),
+          ],
+        ),
       ),
     );
   }

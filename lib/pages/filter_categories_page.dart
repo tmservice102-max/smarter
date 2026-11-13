@@ -1,5 +1,6 @@
 // Hide categories (FilterCategoriesActivity): checked = hidden from the list.
 import 'package:material_ui/material_ui.dart';
+
 import '../library.dart';
 import '../models.dart';
 import '../store.dart';
@@ -32,40 +33,44 @@ class _FilterCategoriesPageState extends State<FilterCategoriesPage> {
     return PageBg(
       child: Padding(
         padding: EdgeInsets.all(5.sdp),
-        child: Column(children: [
-          PageTop(title: S.categories, icon: 'list_channels'),
-          SizedBox(height: 5.sdp),
-          Expanded(
-            child: cats.isEmpty
-                ? Empty(S.err_no_data_found)
-                : GridView.builder(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      mainAxisExtent: 46.sdp,
-                    ),
-                    itemCount: cats.length,
-                    itemBuilder: (_, i) {
-                      final c = cats[i];
-                      final on = _hidden.contains(_id(c));
-                      return Tap(
-                        onTap: () => _toggle(c),
-                        builder: (f) => Container(
-                          margin: EdgeInsets.all(2.sdp),
-                          decoration: BoxDecoration(
-                            color: const Color(0x12FFFFFF),
-                            borderRadius: BorderRadius.circular(1.sdp),
-                            border: Border.all(color: f ? const Color(0xFFFFAB00) : C.border, width: 1.sdp),
+        child: Column(
+          children: [
+            PageTop(title: S.categories, icon: 'list_channels'),
+            SizedBox(height: 5.sdp),
+            Expanded(
+              child: cats.isEmpty
+                  ? Empty(S.err_no_data_found)
+                  : GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        mainAxisExtent: 46.sdp,
+                      ),
+                      itemCount: cats.length,
+                      itemBuilder: (_, i) {
+                        final c = cats[i];
+                        final on = _hidden.contains(_id(c));
+                        return Tap(
+                          onTap: () => _toggle(c),
+                          builder: (f) => Container(
+                            margin: EdgeInsets.all(2.sdp),
+                            decoration: BoxDecoration(
+                              color: const Color(0x12FFFFFF),
+                              borderRadius: BorderRadius.circular(1.sdp),
+                              border: Border.all(color: f ? const Color(0xFFFFAB00) : C.border, width: 1.sdp),
+                            ),
+                            child: Row(
+                              children: [
+                                Ic(on ? 'ic_checkbox' : 'ic_checkbox_blank', size: 40.sdp, pad: 10.sdp),
+                                Expanded(child: T(c.name, size: 12, color: C.title, lines: 2)),
+                              ],
+                            ),
                           ),
-                          child: Row(children: [
-                            Ic(on ? 'ic_checkbox' : 'ic_checkbox_blank', size: 40.sdp, pad: 10.sdp),
-                            Expanded(child: T(c.name, size: 12, color: C.title, lines: 2)),
-                          ]),
-                        ),
-                      );
-                    },
-                  ),
-          ),
-        ]),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

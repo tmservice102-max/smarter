@@ -1,6 +1,8 @@
 // Shared parts of the movie and series detail pages.
 import 'dart:ui';
+
 import 'package:material_ui/material_ui.dart';
+
 import '../api/panel_api.dart';
 import '../downloads.dart';
 import '../store.dart';
@@ -18,23 +20,29 @@ class BlurBg extends StatelessWidget {
     Dim.init(context);
     return Scaffold(
       backgroundColor: C.bgBottom,
-      body: Stack(fit: StackFit.expand, children: [
-        if (image.startsWith('http'))
-          ImageFiltered(
-            imageFilter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
-            child: NetImg(image, placeholder: 'placeholder_horizontal'),
-          ),
-        Opacity(
-          opacity: image.startsWith('http') ? 0.8 : 1,
-          child: const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                  begin: Alignment.bottomCenter, end: Alignment.topCenter, colors: [C.bgBottom, C.bgTop]),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (image.startsWith('http'))
+            ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+              child: NetImg(image, placeholder: 'placeholder_horizontal'),
+            ),
+          Opacity(
+            opacity: image.startsWith('http') ? 0.8 : 1,
+            child: const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [C.bgBottom, C.bgTop],
+                ),
+              ),
             ),
           ),
-        ),
-        SafeArea(child: child),
-      ]),
+          SafeArea(child: child),
+        ],
+      ),
     );
   }
 }
@@ -50,9 +58,10 @@ class Stars extends StatelessWidget {
     var r = double.tryParse(rating) ?? 0;
     if (tenScale) r = r / 2;
     final n = r.floor().clamp(0, 5);
-    return Row(mainAxisSize: MainAxisSize.min, children: [
-      for (var i = 0; i < 5; i++) Ic(i < n ? 'ic_star' : 'ic_star_border', size: size.sdp, color: null),
-    ]);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [for (var i = 0; i < 5; i++) Ic(i < n ? 'ic_star' : 'ic_star_border', size: size.sdp, color: null)],
+    );
   }
 }
 
@@ -62,19 +71,27 @@ class InfoTable extends StatelessWidget {
   const InfoTable(this.rows, {super.key});
   @override
   Widget build(BuildContext context) => Padding(
-        padding: EdgeInsets.all(10.sdp),
-        child: Table(
-          columnWidths: const {0: FlexColumnWidth(0.9), 1: FlexColumnWidth(2)},
-          defaultVerticalAlignment: TableCellVerticalAlignment.top,
-          children: [
-            for (final (k, v) in rows)
-              TableRow(children: [
-                Padding(padding: EdgeInsets.only(bottom: 4.sdp), child: T(k, size: 10, weight: FontWeight.bold)),
-                Padding(padding: EdgeInsets.only(bottom: 4.sdp), child: v),
-              ]),
-          ],
-        ),
-      );
+    padding: EdgeInsets.all(10.sdp),
+    child: Table(
+      columnWidths: const {0: FlexColumnWidth(0.9), 1: FlexColumnWidth(2)},
+      defaultVerticalAlignment: TableCellVerticalAlignment.top,
+      children: [
+        for (final (k, v) in rows)
+          TableRow(
+            children: [
+              Padding(
+                padding: EdgeInsets.only(bottom: 4.sdp),
+                child: T(k, size: 10, weight: FontWeight.bold),
+              ),
+              Padding(
+                padding: EdgeInsets.only(bottom: 4.sdp),
+                child: v,
+              ),
+            ],
+          ),
+      ],
+    ),
+  );
 }
 
 String na(String v) => v.isEmpty || v == 'null' ? S.n_a : v;
@@ -100,22 +117,26 @@ class SaveBtn extends StatelessWidget {
   const SaveBtn({super.key, required this.icon, required this.text, this.onTap, this.busy = false});
   @override
   Widget build(BuildContext context) => Tap(
-        onTap: busy ? null : onTap,
-        builder: (f) => SaveBox(
-          focused: f,
-          padding: EdgeInsets.symmetric(vertical: 5.sdp, horizontal: 6.sdp),
-          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            busy
-                ? SizedBox(
-                    width: 16.sdp,
-                    height: 16.sdp,
-                    child: const CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : Ic(icon, size: 20.sdp, pad: 2.sdp),
-            SizedBox(width: 6.sdp),
-            Flexible(child: T(text, size: 11, lines: 1)),
-          ]),
-        ),
-      );
+    onTap: busy ? null : onTap,
+    builder: (f) => SaveBox(
+      focused: f,
+      padding: EdgeInsets.symmetric(vertical: 5.sdp, horizontal: 6.sdp),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          busy
+              ? SizedBox(
+                  width: 16.sdp,
+                  height: 16.sdp,
+                  child: const CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                )
+              : Ic(icon, size: 20.sdp, pad: 2.sdp),
+          SizedBox(width: 6.sdp),
+          Flexible(child: T(text, size: 11, lines: 1)),
+        ],
+      ),
+    ),
+  );
 }
 
 /// Download progress line (ll_download_progress) for one download id.
@@ -124,16 +145,19 @@ class DownloadLine extends StatelessWidget {
   const DownloadLine(this.id, {super.key});
   @override
   Widget build(BuildContext context) => ListenableBuilder(
-        listenable: Downloads.instance,
-        builder: (_, _) {
-          final d = Downloads.instance.find(id);
-          if (d == null || d.status == DlStatus.done || d.status == DlStatus.failed) return const SizedBox();
-          final pct = (d.progress * 100).toStringAsFixed(0);
-          return Padding(
-            padding: EdgeInsets.only(top: 5.sdp),
-            child: Row(children: [
-              Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    listenable: Downloads.instance,
+    builder: (_, _) {
+      final d = Downloads.instance.find(id);
+      if (d == null || d.status == DlStatus.done || d.status == DlStatus.failed) return const SizedBox();
+      final pct = (d.progress * 100).toStringAsFixed(0);
+      return Padding(
+        padding: EdgeInsets.only(top: 5.sdp),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   T('${S.downloading} $pct%', size: 9),
                   SizedBox(height: 4.sdp),
                   LinearProgressIndicator(
@@ -142,21 +166,33 @@ class DownloadLine extends StatelessWidget {
                     color: C.primary,
                     backgroundColor: const Color(0x33FFFFFF),
                   ),
-                ]),
+                ],
               ),
-              IconTap('ic_close', size: 22, pad: 4, onTap: () {
+            ),
+            IconTap(
+              'ic_close',
+              size: 22,
+              pad: 4,
+              onTap: () {
                 Downloads.instance.remove(d);
                 toast(context, S.download_cancelled);
-              }),
-            ]),
-          );
-        },
+              },
+            ),
+          ],
+        ),
       );
+    },
+  );
 }
 
 /// Starts a download unless it is already there (DownloadService).
-void startDownload(BuildContext context,
-    {required String id, required String title, required String icon, required String url}) {
+void startDownload(
+  BuildContext context, {
+  required String id,
+  required String title,
+  required String icon,
+  required String url,
+}) {
   final d = Downloads.instance.find(id);
   if (d != null && d.status == DlStatus.done) {
     toast(context, S.already_download);
@@ -175,35 +211,40 @@ Future<void> feedbackDialog(BuildContext context, String title) async {
     title: S.feedback,
     width: 280,
     child: Builder(
-      builder: (ctx) => Column(mainAxisSize: MainAxisSize.min, children: [
-        Container(
-          margin: EdgeInsets.symmetric(horizontal: 5.sdp),
-          decoration: BoxDecoration(
-            color: C.fill,
-            borderRadius: BorderRadius.circular(3.sdp),
-            border: Border.all(color: C.border),
-          ),
-          child: TextField(
-            controller: ctrl,
-            minLines: 3,
-            maxLines: 5,
-            style: TextStyle(color: C.title, fontSize: 12.ssp),
-            cursorColor: Colors.white,
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              hintText: S.please_describe_the_problem,
-              hintStyle: TextStyle(color: Colors.white54, fontSize: 12.ssp),
-              contentPadding: const EdgeInsets.all(12),
+      builder: (ctx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            margin: EdgeInsets.symmetric(horizontal: 5.sdp),
+            decoration: BoxDecoration(
+              color: C.fill,
+              borderRadius: BorderRadius.circular(3.sdp),
+              border: Border.all(color: C.border),
+            ),
+            child: TextField(
+              controller: ctrl,
+              minLines: 3,
+              maxLines: 5,
+              style: TextStyle(color: C.title, fontSize: 12.ssp),
+              cursorColor: Colors.white,
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                hintText: S.please_describe_the_problem,
+                hintStyle: TextStyle(color: Colors.white54, fontSize: 12.ssp),
+                contentPadding: const EdgeInsets.all(12),
+              ),
             ),
           ),
-        ),
-        Padding(
-          padding: EdgeInsets.all(10.sdp),
-          child: Row(children: [
-            Expanded(child: GradButton(text: S.cancel, textSize: 13, onTap: () => Navigator.pop(ctx))),
-            SizedBox(width: 8.sdp),
-            Expanded(
-                child: GradButton(
+          Padding(
+            padding: EdgeInsets.all(10.sdp),
+            child: Row(
+              children: [
+                Expanded(
+                  child: GradButton(text: S.cancel, textSize: 13, onTap: () => Navigator.pop(ctx)),
+                ),
+                SizedBox(width: 8.sdp),
+                Expanded(
+                  child: GradButton(
                     text: S.submit,
                     textSize: 13,
                     gradient: G.primaryBtn,
@@ -213,10 +254,14 @@ Future<void> feedbackDialog(BuildContext context, String title) async {
                         return;
                       }
                       Navigator.pop(ctx, ctrl.text.trim());
-                    })),
-          ]),
-        ),
-      ]),
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     ),
   );
   if (msg == null || msg.isEmpty) return;
@@ -237,13 +282,21 @@ void openGallery(BuildContext context, List<String> images) {
     context,
     Scaffold(
       backgroundColor: Colors.black,
-      body: Stack(children: [
-        PageView(children: [
-          for (final u in list) InteractiveViewer(child: Center(child: NetImg(u, fit: BoxFit.contain))),
-        ]),
-        SafeArea(
-            child: Builder(builder: (c) => IconTap('ic_arrow_left', size: 33, pad: 5, onTap: () => Navigator.pop(c)))),
-      ]),
+      body: Stack(
+        children: [
+          PageView(
+            children: [
+              for (final u in list)
+                InteractiveViewer(
+                  child: Center(child: NetImg(u, fit: BoxFit.contain)),
+                ),
+            ],
+          ),
+          SafeArea(
+            child: Builder(builder: (c) => IconTap('ic_arrow_left', size: 33, pad: 5, onTap: () => Navigator.pop(c))),
+          ),
+        ],
+      ),
     ),
   );
 }

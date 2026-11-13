@@ -12,13 +12,14 @@ abstract class ContentSource {
   Future<MovieInfo> movieInfo(StreamItem item);
   Future<SeriesInfo> seriesInfo(StreamItem item);
   Future<List<EpgEntry>> shortEpg(StreamItem channel);
+
   /// Full guide (past and future) for one channel.
   Future<List<EpgEntry>> fullEpg(StreamItem channel);
+
   /// URL to watch a past program again (catch-up), or '' if not possible.
   String catchupUrl(StreamItem channel, EpgEntry entry);
   String streamUrl(StreamItem item);
   String episodeUrl(Episode ep);
 
-  static ContentSource forAccount(Account a) =>
-      a.type == AccountType.xtream ? XtreamSource(a) : M3uSource(a);
+  static ContentSource forAccount(Account a) => a.type == AccountType.xtream ? XtreamSource(a) : M3uSource(a);
 }

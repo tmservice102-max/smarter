@@ -1,6 +1,8 @@
 // Splash screen (LauncherActivity / activity_launcher.xml).
 import 'dart:convert';
+
 import 'package:material_ui/material_ui.dart';
+
 import '../api/panel_api.dart';
 import '../config.dart';
 import '../library.dart';
@@ -41,8 +43,14 @@ class _LauncherPageState extends State<LauncherPage> {
       } else {
         if (!mounted) return;
         setState(() => _loading = false);
-        final again = await appDialog(context,
-            icon: 'ic_wifi_off', title: S.err_server_error, msg: S.err_server_not_connected, yes: S.try_again_later, no: null);
+        final again = await appDialog(
+          context,
+          icon: 'ic_wifi_off',
+          title: S.err_server_error,
+          msg: S.err_server_not_connected,
+          yes: S.try_again_later,
+          no: null,
+        );
         if (again) _start();
         return;
       }
@@ -50,12 +58,14 @@ class _LauncherPageState extends State<LauncherPage> {
     if (!mounted) return;
     setState(() => _loading = false);
     if (Session.app?.maintenance == true) {
-      await appDialog(context,
-          icon: 'ic_engineering',
-          title: S.temporarily_down_for_maintenance,
-          msg: S.we_are_performing_scheduled,
-          yes: S.try_again_later,
-          no: null);
+      await appDialog(
+        context,
+        icon: 'ic_engineering',
+        title: S.temporarily_down_for_maintenance,
+        msg: S.we_are_performing_scheduled,
+        yes: S.try_again_later,
+        no: null,
+      );
       if (mounted) _start();
       return;
     }
@@ -84,34 +94,42 @@ class _LauncherPageState extends State<LauncherPage> {
   @override
   Widget build(BuildContext context) {
     return PageBg(
-      child: Stack(children: [
-        Center(
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            T(S.app_name, size: 28, weight: FontWeight.bold, align: TextAlign.center),
-            SizedBox(height: 2.sdp),
-            Opacity(
-              opacity: 0.7,
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Ic('ic_keyhole', size: 14.sdp),
-                SizedBox(width: 5.sdp),
-                T(S.encrypted_data_security, size: 11),
-              ]),
+      child: Stack(
+        children: [
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                T(S.app_name, size: 28, weight: FontWeight.bold, align: TextAlign.center),
+                SizedBox(height: 2.sdp),
+                Opacity(
+                  opacity: 0.7,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Ic('ic_keyhole', size: 14.sdp),
+                      SizedBox(width: 5.sdp),
+                      T(S.encrypted_data_security, size: 11),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 15.sdp),
+                SizedBox(
+                  height: 30.sdp,
+                  width: 30.sdp,
+                  child: _loading ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 3) : null,
+                ),
+              ],
             ),
-            SizedBox(height: 15.sdp),
-            SizedBox(
-              height: 30.sdp,
-              width: 30.sdp,
-              child: _loading ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 3) : null,
-            ),
-          ]),
-        ),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 20.sdp,
-          child: T('${S.version} ${AppConfig.version}', size: 11, color: C.titleSub, align: TextAlign.center),
-        ),
-      ]),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 20.sdp,
+            child: T('${S.version} ${AppConfig.version}', size: 11, color: C.titleSub, align: TextAlign.center),
+          ),
+        ],
+      ),
     );
   }
 }

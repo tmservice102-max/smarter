@@ -1,8 +1,10 @@
 // Radio (RadioActivity / activity_radio): category chips, station grid and
 // a small player bar at the bottom.
 import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:media_kit/media_kit.dart';
+
 import '../library.dart';
 import '../models.dart';
 import '../session.dart';
@@ -81,56 +83,64 @@ class _RadioPageState extends State<RadioPage> {
     return PageBg(
       child: Padding(
         padding: EdgeInsets.all(5.sdp),
-        child: Column(children: [
-          PageTop(title: 'Radio', icon: 'ic_radio'),
-          if (_cats.length > 1)
-            SizedBox(
-              height: 30.sdp,
-              child: ListView(scrollDirection: Axis.horizontal, children: [
-                for (final c in _cats)
-                  Padding(
-                    padding: EdgeInsets.only(right: 5.sdp),
-                    child: Tap(
-                      onTap: () => setState(() => _cat = c.id),
-                      builder: (f) => Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12.sdp),
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: const Color(0x12FFFFFF),
-                          borderRadius: BorderRadius.circular(1.sdp),
-                          border: Border.all(color: f ? const Color(0xFFFFAB00) : C.border, width: 1.sdp),
+        child: Column(
+          children: [
+            PageTop(title: 'Radio', icon: 'ic_radio'),
+            if (_cats.length > 1)
+              SizedBox(
+                height: 30.sdp,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    for (final c in _cats)
+                      Padding(
+                        padding: EdgeInsets.only(right: 5.sdp),
+                        child: Tap(
+                          onTap: () => setState(() => _cat = c.id),
+                          builder: (f) => Container(
+                            padding: EdgeInsets.symmetric(horizontal: 12.sdp),
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: const Color(0x12FFFFFF),
+                              borderRadius: BorderRadius.circular(1.sdp),
+                              border: Border.all(color: f ? const Color(0xFFFFAB00) : C.border, width: 1.sdp),
+                            ),
+                            child: T(c.name, size: 12, color: c.id == _cat ? C.select : Colors.white),
+                          ),
                         ),
-                        child: T(c.name, size: 12, color: c.id == _cat ? C.select : Colors.white),
                       ),
-                    ),
-                  ),
-              ]),
-            ),
-          SizedBox(height: 5.sdp),
-          Expanded(
-            child: _loading
-                ? const Loader()
-                : list.isEmpty
-                    ? Empty(S.err_no_data_found)
-                    : GridView.builder(
-                        gridDelegate:
-                            SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 6, mainAxisExtent: 104.sdp),
-                        itemCount: list.length,
-                        itemBuilder: (_, i) {
-                          final r = list[i];
-                          final on = _now?.key == r.key;
-                          return Tap(
-                            onTap: () => _play(r),
-                            builder: (f) => Container(
-                              margin: EdgeInsets.all(2.sdp),
-                              decoration: BoxDecoration(
-                                color: const Color(0x0DFFFFFF),
-                                borderRadius: BorderRadius.circular(3.sdp),
-                                border: Border.all(color: f || on ? C.select : Colors.transparent, width: 2.sdp),
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(3.sdp),
-                                child: Stack(fit: StackFit.expand, children: [
+                  ],
+                ),
+              ),
+            SizedBox(height: 5.sdp),
+            Expanded(
+              child: _loading
+                  ? const Loader()
+                  : list.isEmpty
+                  ? Empty(S.err_no_data_found)
+                  : GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 6,
+                        mainAxisExtent: 104.sdp,
+                      ),
+                      itemCount: list.length,
+                      itemBuilder: (_, i) {
+                        final r = list[i];
+                        final on = _now?.key == r.key;
+                        return Tap(
+                          onTap: () => _play(r),
+                          builder: (f) => Container(
+                            margin: EdgeInsets.all(2.sdp),
+                            decoration: BoxDecoration(
+                              color: const Color(0x0DFFFFFF),
+                              borderRadius: BorderRadius.circular(3.sdp),
+                              border: Border.all(color: f || on ? C.select : Colors.transparent, width: 2.sdp),
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(3.sdp),
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
                                   NetImg(r.icon, placeholder: 'placeholder_live', fit: BoxFit.contain),
                                   Positioned(
                                     left: 3.sdp,
@@ -142,45 +152,53 @@ class _RadioPageState extends State<RadioPage> {
                                       child: T(r.name, size: 8, lines: 1, align: TextAlign.center),
                                     ),
                                   ),
-                                ]),
+                                ],
                               ),
                             ),
-                          );
-                        },
-                      ),
-          ),
-          if (_now != null)
-            Container(
-              height: 46.sdp,
-              decoration: const BoxDecoration(
-                color: Color(0x59000000),
-                border: Border(top: BorderSide(color: Color(0xFF191919))),
-              ),
-              child: Row(children: [
-                SizedBox(width: 25.sdp),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(3.sdp),
-                  child: NetImg(_now!.icon, placeholder: 'placeholder_live', width: 30.sdp, height: 30.sdp),
-                ),
-                SizedBox(width: 10.sdp),
-                Expanded(
-                  child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    T(_now!.name, size: 11, color: C.title, lines: 1),
-                    if (catName.isNotEmpty) T(catName, size: 9, color: C.titleSub, lines: 1),
-                  ]),
-                ),
-                IconTap('ic_skip_previous', size: 35, pad: 6, onTap: () => _step(-1)),
-                SizedBox(
-                  width: 35.sdp,
-                  child: _buffering && !_playing
-                      ? const Loader(size: 20)
-                      : IconTap(_playing ? 'ic_pause' : 'ic_play', size: 35, pad: 6, onTap: _player.playOrPause),
-                ),
-                IconTap('ic_skip_next', size: 35, pad: 6, onTap: () => _step(1)),
-                SizedBox(width: 10.sdp),
-              ]),
+                          ),
+                        );
+                      },
+                    ),
             ),
-        ]),
+            if (_now != null)
+              Container(
+                height: 46.sdp,
+                decoration: const BoxDecoration(
+                  color: Color(0x59000000),
+                  border: Border(top: BorderSide(color: Color(0xFF191919))),
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(width: 25.sdp),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(3.sdp),
+                      child: NetImg(_now!.icon, placeholder: 'placeholder_live', width: 30.sdp, height: 30.sdp),
+                    ),
+                    SizedBox(width: 10.sdp),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          T(_now!.name, size: 11, color: C.title, lines: 1),
+                          if (catName.isNotEmpty) T(catName, size: 9, color: C.titleSub, lines: 1),
+                        ],
+                      ),
+                    ),
+                    IconTap('ic_skip_previous', size: 35, pad: 6, onTap: () => _step(-1)),
+                    SizedBox(
+                      width: 35.sdp,
+                      child: _buffering && !_playing
+                          ? const Loader(size: 20)
+                          : IconTap(_playing ? 'ic_pause' : 'ic_play', size: 35, pad: 6, onTap: _player.playOrPause),
+                    ),
+                    IconTap('ic_skip_next', size: 35, pad: 6, onTap: () => _step(1)),
+                    SizedBox(width: 10.sdp),
+                  ],
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

@@ -32,11 +32,13 @@ class S {
   static const cancel = 'Cancel';
   static const sure_exit = 'Are you sure you want to exit app?';
   static const upgrade = 'Upgrade';
-  static const its_time_to_upgrade = 'Its time to Upgrade to the latest version of our application to get the best experience.';
+  static const its_time_to_upgrade =
+      'Its time to Upgrade to the latest version of our application to get the best experience.';
   static const do_it_now = 'DO IT NOW';
   static const maintenance = 'Maintenance';
   static const temporarily_down_for_maintenance = 'Temporarily Down for Maintenance';
-  static const we_are_performing_scheduled = 'we are performing scheduled maintenance. we should be back online shortly.';
+  static const we_are_performing_scheduled =
+      'we are performing scheduled maintenance. we should be back online shortly.';
   static const try_again_later = 'Try again later';
   static const sniffing_detected = 'Sniffing Detected';
   static const turn_off_all_sniffers_tools = 'Turn off all sniffers Tools and Vpn tools to access app';
@@ -54,7 +56,8 @@ class S {
   static const warning_adults_only = 'Warning Adults Only';
   static const select_recently_limit = 'Select Recently Limit';
   static const live_not_downloaded = 'Live TV Not Downloaded';
-  static const want_to_download = 'You need to download live tv in order to use this feature. Do you want to download now?';
+  static const want_to_download =
+      'You need to download live tv in order to use this feature. Do you want to download now?';
   static const select_reload_hours = 'Select auto reload hours';
   static const select_blur_radius = 'Select Blur Radius';
   static const yes = 'YES';
@@ -259,15 +262,20 @@ class S {
   static const err_vpn_profile_incomplete = 'Profile is missing required credentials.';
   static const openvpn_help = 'Help';
   static const openvpn_help_title = 'VPN Help';
-  static const openvpn_help_intro = 'Follow these steps to set up a secure connection using your .ovpn configuration file or a remote URL.';
+  static const openvpn_help_intro =
+      'Follow these steps to set up a secure connection using your .ovpn configuration file or a remote URL.';
   static const openvpn_help_section_import = '1. Import your configuration';
-  static const openvpn_help_section_import_body = 'Select FILE to browse for a .ovpn profile on your device or choose URL to download it from a remote server. Make sure the file comes from a trusted source.';
+  static const openvpn_help_section_import_body =
+      'Select FILE to browse for a .ovpn profile on your device or choose URL to download it from a remote server. Make sure the file comes from a trusted source.';
   static const openvpn_help_section_connect = '2. Provide credentials and connect';
-  static const openvpn_help_section_connect_body = 'Enter the VPN username and password supplied by your provider, then tap CONNECT. The profile is handed off to the OpenVPN Connect app to complete the connection.';
+  static const openvpn_help_section_connect_body =
+      'Enter the VPN username and password supplied by your provider, then tap CONNECT. The profile is handed off to the OpenVPN Connect app to complete the connection.';
   static const openvpn_help_section_profiles = '3. Manage saved profiles';
-  static const openvpn_help_section_profiles_body = 'Every successful connection is stored under VPN Profiles so you can reconnect later with one click or delete entries you no longer need.';
+  static const openvpn_help_section_profiles_body =
+      'Every successful connection is stored under VPN Profiles so you can reconnect later with one click or delete entries you no longer need.';
   static const openvpn_help_section_tips = 'Tips';
-  static const openvpn_help_section_tips_body = 'Keep your credentials private, verify URLs before downloading configs, and ensure OpenVPN Connect stays updated for the best compatibility.';
+  static const openvpn_help_section_tips_body =
+      'Keep your credentials private, verify URLs before downloading configs, and ensure OpenVPN Connect stays updated for the best compatibility.';
   static const openvpn_help_open_setup = 'Open VPN Setup';
   static const openvpn_help_get_app = 'Install OpenVPN App';
   static const trial_account = 'TRIAL USER';

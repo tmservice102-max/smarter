@@ -43,11 +43,20 @@ class G {
   static const primaryBtn = LinearGradient(colors: [Color(0xFF4A00E0), Color(0xFF8E2DE2)]);
   static const success = LinearGradient(colors: [Color(0xFF38EF7D), Color(0xFF11998E)]);
   static const tv = LinearGradient(
-      begin: Alignment.bottomCenter, end: Alignment.topCenter, colors: [Color(0xFF3C56DE), Color(0xFF36D29B)]);
+    begin: Alignment.bottomCenter,
+    end: Alignment.topCenter,
+    colors: [Color(0xFF3C56DE), Color(0xFF36D29B)],
+  );
   static const movies = LinearGradient(
-      begin: Alignment.bottomCenter, end: Alignment.topCenter, colors: [Color(0xFFF69D3F), Color(0xFFDB2E54)]);
+    begin: Alignment.bottomCenter,
+    end: Alignment.topCenter,
+    colors: [Color(0xFFF69D3F), Color(0xFFDB2E54)],
+  );
   static const series = LinearGradient(
-      begin: Alignment.bottomCenter, end: Alignment.topCenter, colors: [Color(0xFF5396DC), Color(0xFF9C3CB3)]);
+    begin: Alignment.bottomCenter,
+    end: Alignment.topCenter,
+    colors: [Color(0xFF5396DC), Color(0xFF9C3CB3)],
+  );
   static const users = [
     [Color(0xFFFF4B2B), Color(0xFFFF416C)],
     [Color(0xFFBC4E9C), Color(0xFFF80759)],
@@ -74,7 +83,10 @@ class PageBg extends StatelessWidget {
       body: DecoratedBox(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-              begin: Alignment.bottomCenter, end: Alignment.topCenter, colors: [C.bgBottom, C.bgTop]),
+            begin: Alignment.bottomCenter,
+            end: Alignment.topCenter,
+            colors: [C.bgBottom, C.bgTop],
+          ),
         ),
         child: SizedBox.expand(child: safe ? SafeArea(child: child) : child),
       ),
@@ -94,10 +106,12 @@ class Ic extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.all(pad),
-      child: SvgPicture.asset('assets/icons/$name.svg',
-          width: size - pad * 2,
-          height: size - pad * 2,
-          colorFilter: color == null ? null : ColorFilter.mode(color!, BlendMode.srcIn)),
+      child: SvgPicture.asset(
+        'assets/icons/$name.svg',
+        width: size - pad * 2,
+        height: size - pad * 2,
+        colorFilter: color == null ? null : ColorFilter.mode(color!, BlendMode.srcIn),
+      ),
     );
   }
 }
@@ -109,9 +123,9 @@ class Logo extends StatelessWidget {
   const Logo({super.key, required this.size, this.radius = 3});
   @override
   Widget build(BuildContext context) => ClipRRect(
-        borderRadius: BorderRadius.circular(radius.sdp),
-        child: Image.asset('assets/img/logo.jpg', width: size, height: size, fit: BoxFit.cover),
-      );
+    borderRadius: BorderRadius.circular(radius.sdp),
+    child: Image.asset('assets/img/logo.jpg', width: size, height: size, fit: BoxFit.cover),
+  );
 }
 
 /// Text with the Android defaults (white).
@@ -122,14 +136,15 @@ class T extends StatelessWidget {
   final FontWeight? weight;
   final int? lines;
   final TextAlign? align;
-  const T(this.text,
-      {super.key, this.size = 11, this.color = Colors.white, this.weight, this.lines, this.align});
+  const T(this.text, {super.key, this.size = 11, this.color = Colors.white, this.weight, this.lines, this.align});
   @override
-  Widget build(BuildContext context) => Text(text,
-      maxLines: lines,
-      overflow: lines == null ? null : TextOverflow.ellipsis,
-      textAlign: align,
-      style: TextStyle(color: color, fontSize: size.ssp, fontWeight: weight, height: 1.2));
+  Widget build(BuildContext context) => Text(
+    text,
+    maxLines: lines,
+    overflow: lines == null ? null : TextOverflow.ellipsis,
+    textAlign: align,
+    style: TextStyle(color: color, fontSize: size.ssp, fontWeight: weight, height: 1.2),
+  );
 }
 
 /// A tappable area that shows the Android "focused" look while pressed.
@@ -152,10 +167,12 @@ class _TapState extends State<Tap> {
       autofocus: widget.autofocus,
       onShowFocusHighlight: (v) => setState(() => _focus = v),
       actions: {
-        ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: (_) {
-          widget.onTap?.call();
-          return null;
-        }),
+        ActivateIntent: CallbackAction<ActivateIntent>(
+          onInvoke: (_) {
+            widget.onTap?.call();
+            return null;
+          },
+        ),
       },
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -179,15 +196,16 @@ class PillField extends StatefulWidget {
   final TextInputType? keyboard;
   final double height;
   final ValueChanged<String>? onSubmitted;
-  const PillField(
-      {super.key,
-      required this.icon,
-      required this.hint,
-      required this.controller,
-      this.password = false,
-      this.keyboard,
-      this.height = 30,
-      this.onSubmitted});
+  const PillField({
+    super.key,
+    required this.icon,
+    required this.hint,
+    required this.controller,
+    this.password = false,
+    this.keyboard,
+    this.height = 30,
+    this.onSubmitted,
+  });
   @override
   State<PillField> createState() => _PillFieldState();
 }
@@ -203,39 +221,49 @@ class _PillFieldState extends State<PillField> {
         borderRadius: BorderRadius.circular(50.sdp),
         border: Border.all(color: C.border, width: 1.sdp),
       ),
-      child: Row(children: [
-        SizedBox(width: 30.sdp, child: Ic(widget.icon, size: 30.sdp, pad: 8.sdp)),
-        Container(width: 1.sdp, color: C.border, margin: EdgeInsets.symmetric(vertical: 5.sdp)),
-        Expanded(
-          child: TextField(
-            controller: widget.controller,
-            obscureText: widget.password && _hidden,
-            keyboardType: widget.keyboard,
-            autocorrect: false,
-            enableSuggestions: false,
-            textInputAction: TextInputAction.next,
-            onSubmitted: widget.onSubmitted,
-            style: TextStyle(color: Colors.white, fontSize: 10.ssp),
-            cursorColor: Colors.white,
-            decoration: InputDecoration(
-              isCollapsed: true,
-              border: InputBorder.none,
-              hintText: widget.hint,
-              hintStyle: TextStyle(color: Colors.white54, fontSize: 10.ssp),
-              contentPadding: EdgeInsets.symmetric(horizontal: 8.sdp),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 30.sdp,
+            child: Ic(widget.icon, size: 30.sdp, pad: 8.sdp),
+          ),
+          Container(
+            width: 1.sdp,
+            color: C.border,
+            margin: EdgeInsets.symmetric(vertical: 5.sdp),
+          ),
+          Expanded(
+            child: TextField(
+              controller: widget.controller,
+              obscureText: widget.password && _hidden,
+              keyboardType: widget.keyboard,
+              autocorrect: false,
+              enableSuggestions: false,
+              textInputAction: TextInputAction.next,
+              onSubmitted: widget.onSubmitted,
+              style: TextStyle(color: Colors.white, fontSize: 10.ssp),
+              cursorColor: Colors.white,
+              decoration: InputDecoration(
+                isCollapsed: true,
+                border: InputBorder.none,
+                hintText: widget.hint,
+                hintStyle: TextStyle(color: Colors.white54, fontSize: 10.ssp),
+                contentPadding: EdgeInsets.symmetric(horizontal: 8.sdp),
+              ),
             ),
           ),
-        ),
-        if (widget.password) ...[
-          Container(width: 1.sdp, color: C.border),
-          GestureDetector(
-            onTap: () => setState(() => _hidden = !_hidden),
-            child: SizedBox(
+          if (widget.password) ...[
+            Container(width: 1.sdp, color: C.border),
+            GestureDetector(
+              onTap: () => setState(() => _hidden = !_hidden),
+              child: SizedBox(
                 width: 28.sdp,
-                child: Ic(_hidden ? 'ic_login_visibility_off' : 'ic_login_visibility', size: 24.sdp, pad: 5.sdp)),
-          ),
+                child: Ic(_hidden ? 'ic_login_visibility_off' : 'ic_login_visibility', size: 24.sdp, pad: 5.sdp),
+              ),
+            ),
+          ],
         ],
-      ]),
+      ),
     );
   }
 }
@@ -248,14 +276,15 @@ class GradButton extends StatelessWidget {
   final VoidCallback? onTap;
   final Gradient gradient;
   final double textSize;
-  const GradButton(
-      {super.key,
-      required this.text,
-      this.icon,
-      this.loading = false,
-      this.onTap,
-      this.gradient = G.danger,
-      this.textSize = 14});
+  const GradButton({
+    super.key,
+    required this.text,
+    this.icon,
+    this.loading = false,
+    this.onTap,
+    this.gradient = G.danger,
+    this.textSize = 14,
+  });
   @override
   Widget build(BuildContext context) {
     return Tap(
@@ -268,18 +297,23 @@ class GradButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(3.sdp),
           border: f ? Border.all(color: Colors.white, width: 1.sdp) : null,
         ),
-        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          if (loading)
-            SizedBox(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (loading)
+              SizedBox(
                 width: 30.sdp,
                 height: 30.sdp,
                 child: Padding(
-                    padding: EdgeInsets.all(7.sdp),
-                    child: const CircularProgressIndicator(strokeWidth: 2, color: Colors.white)))
-          else if (icon != null)
-            Ic(icon!, size: 30.sdp, pad: 7.sdp),
-          T(text, size: textSize),
-        ]),
+                  padding: EdgeInsets.all(7.sdp),
+                  child: const CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                ),
+              )
+            else if (icon != null)
+              Ic(icon!, size: 30.sdp, pad: 7.sdp),
+            T(text, size: textSize),
+          ],
+        ),
       ),
     );
   }
@@ -296,16 +330,20 @@ class UiButton extends StatelessWidget {
     return Tap(
       onTap: onTap,
       builder: (f) => Container(
-        padding: EdgeInsets.symmetric(horizontal: 8.sdp, vertical: 5.sdp),
+        padding: EdgeInsets.symmetric(horizontal: icon == null ? 8.sdp : 5.sdp, vertical: 5.sdp),
         decoration: BoxDecoration(
           color: f ? const Color(0xFFFFB347) : const Color(0xEDFFFFFF),
           borderRadius: BorderRadius.circular(2.sdp),
           border: Border.all(color: Colors.white, width: 1.sdp),
         ),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          if (icon != null) ...[Ic(icon!, size: 14.sdp, color: Colors.black), SizedBox(width: 5.sdp)],
-          T(text, size: 10, color: Colors.black, weight: FontWeight.bold),
-        ]),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // IconView: 21sdp icon, 4sdp gap.
+            if (icon != null) ...[Ic(icon!, size: 21.sdp, color: Colors.black), SizedBox(width: 4.sdp)],
+            T(text, size: 10, color: Colors.black, weight: FontWeight.bold),
+          ],
+        ),
       ),
     );
   }
@@ -320,23 +358,23 @@ class SaveBox extends StatelessWidget {
   const SaveBox({super.key, required this.child, this.focused = false, this.padding, this.radius = 2});
   @override
   Widget build(BuildContext context) => Container(
-        padding: padding,
-        decoration: BoxDecoration(
-          color: focused ? null : C.save,
-          gradient: focused ? G.primaryBtn : null,
-          borderRadius: BorderRadius.circular(radius.sdp),
-          border: Border.all(color: focused ? C.title : C.border, width: 1.sdp),
-        ),
-        child: child,
-      );
+    padding: padding,
+    decoration: BoxDecoration(
+      color: focused ? null : C.save,
+      gradient: focused ? G.primaryBtn : null,
+      borderRadius: BorderRadius.circular(radius.sdp),
+      border: Border.all(color: focused ? C.title : C.border, width: 1.sdp),
+    ),
+    child: child,
+  );
 }
 
 /// bg_card_sub: the bordered panel used for forms.
 BoxDecoration cardSub() => BoxDecoration(
-      color: const Color(0x05000000),
-      borderRadius: BorderRadius.circular(3.sdp),
-      border: Border.all(color: const Color(0x12FFFFFF), width: 1.sdp),
-    );
+  color: const Color(0x05000000),
+  borderRadius: BorderRadius.circular(3.sdp),
+  border: Border.all(color: const Color(0x12FFFFFF), width: 1.sdp),
+);
 
 /// Round icon button used in toolbars (focused_icon_selector).
 class IconTap extends StatelessWidget {
@@ -348,15 +386,12 @@ class IconTap extends StatelessWidget {
   const IconTap(this.icon, {super.key, this.onTap, this.size = 35, this.pad = 8, this.color = Colors.white});
   @override
   Widget build(BuildContext context) => Tap(
-        onTap: onTap,
-        builder: (f) => Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: f ? const Color(0x2DFFFFFF) : Colors.transparent,
-          ),
-          child: Ic(icon, size: size.sdp, pad: pad.sdp, color: color),
-        ),
-      );
+    onTap: onTap,
+    builder: (f) => Container(
+      decoration: BoxDecoration(shape: BoxShape.circle, color: f ? const Color(0x2DFFFFFF) : Colors.transparent),
+      child: Ic(icon, size: size.sdp, pad: pad.sdp, color: color),
+    ),
+  );
 }
 
 /// Network image with the Android placeholders.
@@ -366,8 +401,14 @@ class NetImg extends StatelessWidget {
   final BoxFit fit;
   final double? width;
   final double? height;
-  const NetImg(this.url,
-      {super.key, this.placeholder = 'placeholder_vertical', this.fit = BoxFit.cover, this.width, this.height});
+  const NetImg(
+    this.url, {
+    super.key,
+    this.placeholder = 'placeholder_vertical',
+    this.fit = BoxFit.cover,
+    this.width,
+    this.height,
+  });
   @override
   Widget build(BuildContext context) {
     final ph = Image.asset('assets/img/$placeholder.webp', fit: BoxFit.cover, width: width, height: height);
@@ -390,11 +431,12 @@ class Loader extends StatelessWidget {
   const Loader({super.key, this.size = 40});
   @override
   Widget build(BuildContext context) => Center(
-        child: SizedBox(
-            width: size.sdp,
-            height: size.sdp,
-            child: const CircularProgressIndicator(strokeWidth: 3, color: Colors.white)),
-      );
+    child: SizedBox(
+      width: size.sdp,
+      height: size.sdp,
+      child: const CircularProgressIndicator(strokeWidth: 3, color: Colors.white),
+    ),
+  );
 }
 
 /// Empty state (row_empty).
@@ -404,20 +446,24 @@ class Empty extends StatelessWidget {
   const Empty(this.title, {super.key, this.sub = ''});
   @override
   Widget build(BuildContext context) => Center(
-        child: Padding(
-          padding: EdgeInsets.all(15.sdp),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Ic('ic_search_off', size: 50.sdp, color: C.title),
-            T(title, size: 10, color: C.title, align: TextAlign.center),
-            if (sub.isNotEmpty) ...[
-              SizedBox(height: 3.sdp),
-              SizedBox(
-                  width: 150.sdp,
-                  child: T(sub, size: 9, color: const Color(0xB0DBDBDB), align: TextAlign.center)),
-            ],
-          ]),
-        ),
-      );
+    child: Padding(
+      padding: EdgeInsets.all(15.sdp),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Ic('ic_search_off', size: 50.sdp, color: C.title),
+          T(title, size: 10, color: C.title, align: TextAlign.center),
+          if (sub.isNotEmpty) ...[
+            SizedBox(height: 3.sdp),
+            SizedBox(
+              width: 150.sdp,
+              child: T(sub, size: 9, color: const Color(0xB0DBDBDB), align: TextAlign.center),
+            ),
+          ],
+        ],
+      ),
+    ),
+  );
 }
 
 /// Top bar of list pages: back, page icon, title, then trailing buttons.
@@ -429,21 +475,26 @@ class PageTop extends StatelessWidget {
   const PageTop({super.key, required this.title, required this.icon, this.trailing = const [], this.onBack});
   @override
   Widget build(BuildContext context) {
-    return Row(children: [
-      IconTap('ic_arrow_left', size: 33, pad: 5, onTap: onBack ?? () => Navigator.maybePop(context)),
-      Ic(icon, size: 30.sdp, pad: 5.sdp, color: C.title),
-      SizedBox(width: 6.sdp),
-      Expanded(child: T(title, size: 11, lines: 1)),
-      if (trailing.isNotEmpty)
-        SaveBox(
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            for (var i = 0; i < trailing.length; i++) ...[
-              if (i > 0) Container(width: 1.sdp, height: 30.sdp, color: C.border),
-              trailing[i],
-            ]
-          ]),
-        ),
-    ]);
+    return Row(
+      children: [
+        IconTap('ic_arrow_left', size: 33, pad: 5, onTap: onBack ?? () => Navigator.maybePop(context)),
+        Ic(icon, size: 30.sdp, pad: 5.sdp, color: C.title),
+        SizedBox(width: 6.sdp),
+        Expanded(child: T(title, size: 11, lines: 1)),
+        if (trailing.isNotEmpty)
+          SaveBox(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (var i = 0; i < trailing.length; i++) ...[
+                  if (i > 0) Container(width: 1.sdp, height: 30.sdp, color: C.border),
+                  trailing[i],
+                ],
+              ],
+            ),
+          ),
+      ],
+    );
   }
 }
 
@@ -455,14 +506,14 @@ class TopBtn extends StatelessWidget {
   const TopBtn(this.icon, {super.key, this.onTap, this.color = Colors.white});
   @override
   Widget build(BuildContext context) => Tap(
-        onTap: onTap,
-        builder: (f) => Container(
-          width: 35.sdp,
-          height: 30.sdp,
-          decoration: BoxDecoration(gradient: f ? G.primaryBtn : null),
-          child: Ic(icon, size: 30.sdp, pad: 5.sdp, color: color),
-        ),
-      );
+    onTap: onTap,
+    builder: (f) => Container(
+      width: 35.sdp,
+      height: 30.sdp,
+      decoration: BoxDecoration(gradient: f ? G.primaryBtn : null),
+      child: Ic(icon, size: 30.sdp, pad: 5.sdp, color: color),
+    ),
+  );
 }
 
 /// Simple toast like Android's Toasty.
@@ -470,13 +521,15 @@ void toast(BuildContext context, String msg, {bool error = false}) {
   final m = ScaffoldMessenger.maybeOf(context);
   if (m == null) return;
   m.hideCurrentSnackBar();
-  m.showSnackBar(SnackBar(
-    content: Text(msg, style: const TextStyle(color: Colors.white)),
-    backgroundColor: error ? const Color(0xFFD32F2F) : const Color(0xFF323232),
-    behavior: SnackBarBehavior.floating,
-    width: 320,
-    duration: const Duration(seconds: 2),
-  ));
+  m.showSnackBar(
+    SnackBar(
+      content: Text(msg, style: const TextStyle(color: Colors.white)),
+      backgroundColor: error ? const Color(0xFFD32F2F) : const Color(0xFF323232),
+      behavior: SnackBarBehavior.floating,
+      width: 320,
+      duration: const Duration(seconds: 2),
+    ),
+  );
 }
 
 /// Push a page with a fade, like the Android activity switch.
@@ -497,6 +550,9 @@ class TilePattern extends StatelessWidget {
   final Color color;
   const TilePattern({super.key, this.color = const Color(0x41000000)});
   @override
-  Widget build(BuildContext context) => SvgPicture.asset('assets/icons/pattern.svg',
-      fit: BoxFit.cover, colorFilter: ColorFilter.mode(color, BlendMode.srcIn));
+  Widget build(BuildContext context) => SvgPicture.asset(
+    'assets/icons/pattern.svg',
+    fit: BoxFit.cover,
+    colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+  );
 }

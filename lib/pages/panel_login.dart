@@ -1,5 +1,6 @@
 // Log in with a user saved in the panel (activation code / device id).
 import 'package:material_ui/material_ui.dart';
+
 import '../api/xtream_api.dart';
 import '../library.dart';
 import '../models.dart';
@@ -24,11 +25,12 @@ Future<void> loginPanelUser(BuildContext context, PanelUser u) async {
       } catch (_) {}
     } else {
       a = Account.xtream(
-          name: u.userName,
-          server: u.dnsBase.replaceAll(' ', ''),
-          username: u.userName,
-          password: u.password,
-          kind: u.type == 'xui' ? 'xui' : 'stream');
+        name: u.userName,
+        server: u.dnsBase.replaceAll(' ', ''),
+        username: u.userName,
+        password: u.password,
+        kind: u.type == 'xui' ? 'xui' : 'stream',
+      );
       await XtreamSource.login(a);
       await Store.saveAccount(a);
       await Store.setCurrent(a);

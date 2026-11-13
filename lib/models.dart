@@ -22,7 +22,12 @@ class AppDetails {
     return {};
   }
 
-  bool flag(String key) => _b(details[key]);
+  /// Same as Java Boolean.parseBoolean in the Android app: only "true" counts.
+  bool flag(String key) {
+    final v = details[key];
+    return v == true || (v is String && v.trim().toLowerCase() == 'true');
+  }
+
   String get(String key) => _s(details[key]);
 
   bool get maintenance => flag('is_maintenance');
@@ -57,11 +62,7 @@ class AppDetails {
   /// Extra buttons on the login chooser (WhatsApp, Telegram, links).
   List<Map<String, String>> get selectPages => (raw['select_data'] is List ? raw['select_data'] as List : [])
       .whereType<Map>()
-      .map((m) => {
-            'title': _s(m['title']),
-            'type': _s(m['redirect_type']),
-            'url': _s(m['page_data']),
-          })
+      .map((m) => {'title': _s(m['title']), 'type': _s(m['redirect_type']), 'url': _s(m['page_data'])})
       .toList();
 
   /// Popup ad shown once on the home screen.
@@ -90,9 +91,7 @@ class AppDetails {
         .whereType<Map>()
         .map((m) => Dns(_s(m['dns_title']), _s(m['dns_base'])))
         .toList();
-    final notes = (j['notification_data'] is List
-            ? j['notification_data'] as List
-            : [])
+    final notes = (j['notification_data'] is List ? j['notification_data'] as List : [])
         .whereType<Map>()
         .map((m) => Map<String, dynamic>.from(m))
         .toList();
@@ -107,16 +106,12 @@ class PanelUser {
   final String password;
   final String dnsBase;
   PanelUser(this.type, this.userName, this.password, this.dnsBase);
-  factory PanelUser.fromJson(Map<String, dynamic> j) => PanelUser(
-      _s(j['user_type']),
-      _s(j['user_name']),
-      _s(j['user_password']),
-      _s(j['dns_base']));
+  factory PanelUser.fromJson(Map<String, dynamic> j) =>
+      PanelUser(_s(j['user_type']), _s(j['user_name']), _s(j['user_password']), _s(j['dns_base']));
 
   Account toAccount() => type == 'playlist'
       ? Account.playlist(name: userName.isEmpty ? 'Playlist' : userName, url: dnsBase)
-      : Account.xtream(
-          name: userName, server: dnsBase, username: userName, password: password);
+      : Account.xtream(name: userName, server: dnsBase, username: userName, password: password);
 }
 
 enum AccountType { xtream, playlist }
@@ -128,40 +123,41 @@ class Account {
   final String server; // xtream base url, or m3u url
   final String username;
   final String password;
+
   /// How the user logged in, like the Android app: xui (Xtream Codes),
   /// stream (1-Stream), playlist (M3U).
   final String kind;
 
   Account._(this.type, this.name, this.server, this.username, this.password, [String? kind])
-      : kind = kind ?? (type == AccountType.playlist ? 'playlist' : 'xui');
-  factory Account.xtream(
-          {required String name,
-          required String server,
-          required String username,
-          required String password,
-          String kind = 'xui'}) =>
-      Account._(AccountType.xtream, name, normalizeServer(server), username,
-          password, kind);
+    : kind = kind ?? (type == AccountType.playlist ? 'playlist' : 'xui');
+  factory Account.xtream({
+    required String name,
+    required String server,
+    required String username,
+    required String password,
+    String kind = 'xui',
+  }) => Account._(AccountType.xtream, name, normalizeServer(server), username, password, kind);
   factory Account.playlist({required String name, required String url}) =>
       Account._(AccountType.playlist, name, url.trim(), '', '');
 
   String get id => '${type.name}|$server|$username';
 
   Map<String, dynamic> toJson() => {
-        'type': type.name,
-        'name': name,
-        'server': server,
-        'username': username,
-        'password': password,
-        'kind': kind,
-      };
+    'type': type.name,
+    'name': name,
+    'server': server,
+    'username': username,
+    'password': password,
+    'kind': kind,
+  };
   factory Account.fromJson(Map<String, dynamic> j) => Account._(
-      j['type'] == 'playlist' ? AccountType.playlist : AccountType.xtream,
-      _s(j['name']),
-      _s(j['server']),
-      _s(j['username']),
-      _s(j['password']),
-      j['kind'] == null ? null : _s(j['kind']));
+    j['type'] == 'playlist' ? AccountType.playlist : AccountType.xtream,
+    _s(j['name']),
+    _s(j['server']),
+    _s(j['username']),
+    _s(j['password']),
+    j['kind'] == null ? null : _s(j['kind']),
+  );
 
   static String normalizeServer(String s) {
     var v = s.trim();
@@ -194,6 +190,7 @@ class StreamItem {
   final String epgId;
   final String directUrl; // for M3U entries
   final bool hasArchive;
+
   /// When it was added on the server (unix seconds), for "Recently added".
   final int added;
 
@@ -214,32 +211,31 @@ class StreamItem {
   String get key => '${type.name}:$id';
 
   Map<String, dynamic> toJson() => {
-        't': type.name,
-        'id': id,
-        'n': name,
-        'i': icon,
-        'c': categoryId,
-        'x': extension,
-        'r': rating,
-        'e': epgId,
-        'u': directUrl,
-        'a': hasArchive ? 1 : 0,
-        if (added != 0) 'd': added,
-      };
+    't': type.name,
+    'id': id,
+    'n': name,
+    'i': icon,
+    'c': categoryId,
+    'x': extension,
+    'r': rating,
+    'e': epgId,
+    'u': directUrl,
+    'a': hasArchive ? 1 : 0,
+    if (added != 0) 'd': added,
+  };
   factory StreamItem.fromJson(Map<String, dynamic> j) => StreamItem(
-        type: ContentType.values.firstWhere((t) => t.name == j['t'],
-            orElse: () => ContentType.live),
-        id: _s(j['id']),
-        name: _s(j['n']),
-        icon: _s(j['i']),
-        categoryId: _s(j['c']),
-        extension: _s(j['x']),
-        rating: _s(j['r']),
-        epgId: _s(j['e']),
-        directUrl: _s(j['u']),
-        hasArchive: _b(j['a']),
-        added: int.tryParse(_s(j['d'])) ?? 0,
-      );
+    type: ContentType.values.firstWhere((t) => t.name == j['t'], orElse: () => ContentType.live),
+    id: _s(j['id']),
+    name: _s(j['n']),
+    icon: _s(j['i']),
+    categoryId: _s(j['c']),
+    extension: _s(j['x']),
+    rating: _s(j['r']),
+    epgId: _s(j['e']),
+    directUrl: _s(j['u']),
+    hasArchive: _b(j['a']),
+    added: int.tryParse(_s(j['d'])) ?? 0,
+  );
 }
 
 class MovieInfo {
@@ -303,8 +299,7 @@ class EpgEntry {
   final DateTime end;
   final String rawStart; // server time text, used for catch-up URLs
   final bool hasArchive;
-  EpgEntry(this.title, this.description, this.start, this.end,
-      {this.rawStart = '', this.hasArchive = false});
+  EpgEntry(this.title, this.description, this.start, this.end, {this.rawStart = '', this.hasArchive = false});
   bool get isPast => DateTime.now().isAfter(end);
   int get minutes => end.difference(start).inMinutes;
   bool get isNow {
@@ -324,6 +319,5 @@ class AccountInfo {
   final DateTime? expires;
   final String maxConnections;
   final String activeConnections;
-  AccountInfo(
-      this.status, this.expires, this.maxConnections, this.activeConnections);
+  AccountInfo(this.status, this.expires, this.maxConnections, this.activeConnections);
 }

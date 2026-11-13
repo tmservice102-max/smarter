@@ -1,5 +1,7 @@
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
+
 import '../config.dart';
 import '../models.dart';
 
@@ -7,8 +9,7 @@ import '../models.dart';
 class PanelApi {
   static Future<dynamic> _call(Map<String, dynamic> body, {bool check = true}) async {
     final payload = {'application_id': AppConfig.applicationId, ...body};
-    final data = base64.encode(
-        utf8.encode(Uri.encodeComponent(jsonEncode(payload))));
+    final data = base64.encode(utf8.encode(Uri.encodeComponent(jsonEncode(payload))));
     final res = await http
         .post(Uri.parse('${AppConfig.panelUrl}/api'), body: {'data': data})
         .timeout(AppConfig.timeout);
@@ -34,15 +35,13 @@ class PanelApi {
 
   /// Logins saved in the panel for an activation code.
   static Future<List<PanelUser>> activationCode(String code) async {
-    final out = await _call(
-        {'helper_name': 'get_activation_code', 'activation_code': code});
+    final out = await _call({'helper_name': 'get_activation_code', 'activation_code': code});
     return _users(out);
   }
 
   /// Logins saved in the panel for a device id.
   static Future<List<PanelUser>> deviceUsers(String deviceId) async {
-    final out =
-        await _call({'helper_name': 'get_device_user', 'device_id': deviceId});
+    final out = await _call({'helper_name': 'get_device_user', 'device_id': deviceId});
     return _users(out);
   }
 
@@ -72,19 +71,19 @@ class PanelApi {
     if (out is List) {
       for (final m in out.whereType<Map>()) {
         if (m.containsKey('user_type')) {
-          return PanelUser(
-              '${m['user_type']}', '${m['user_name']}', '${m['user_password']}', '${m['dns_base']}');
+          return PanelUser('${m['user_type']}', '${m['user_name']}', '${m['user_password']}', '${m['dns_base']}');
         }
       }
     }
     return null;
   }
 
-  static Future<void> report(
-      {required String user,
-      required String pass,
-      required String title,
-      required String msg}) async {
+  static Future<void> report({
+    required String user,
+    required String pass,
+    required String title,
+    required String msg,
+  }) async {
     await _call({
       'helper_name': 'post_report',
       'user_name': user,

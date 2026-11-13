@@ -1,8 +1,10 @@
 // Live channel player (ExoPlayerLiveActivity + custom_controls_live).
 import 'dart:async';
+
 import 'package:material_ui/material_ui.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
+
 import '../models.dart';
 import '../session.dart';
 import '../store.dart';
@@ -48,21 +50,25 @@ class _PlayerLivePageState extends State<PlayerLivePage> {
     _subs.add(_player.stream.buffering.listen((v) => setState(() => _buffering = v)));
     _subs.add(_player.stream.height.listen((_) => setState(() {})));
     _subs.add(_player.stream.tracks.listen((_) => setState(() {})));
-    _subs.add(_player.stream.position.listen((p) {
-      if (_error && p > Duration.zero) setState(() => _error = false);
-    }));
-    _subs.add(_player.stream.error.listen((e) {
-      if (e.isEmpty) return;
-      // Small errors happen while a stream keeps playing; only show the
-      // retry button if nothing plays after a few seconds.
-      final token = _errorToken;
-      Future.delayed(const Duration(seconds: 3), () {
-        if (!mounted || token != _errorToken) return;
-        final st = _player.state;
-        final ok = st.position > Duration.zero || (st.playing && (st.width ?? 0) > 0);
-        if (!ok) setState(() => _error = true);
-      });
-    }));
+    _subs.add(
+      _player.stream.position.listen((p) {
+        if (_error && p > Duration.zero) setState(() => _error = false);
+      }),
+    );
+    _subs.add(
+      _player.stream.error.listen((e) {
+        if (e.isEmpty) return;
+        // Small errors happen while a stream keeps playing; only show the
+        // retry button if nothing plays after a few seconds.
+        final token = _errorToken;
+        Future.delayed(const Duration(seconds: 3), () {
+          if (!mounted || token != _errorToken) return;
+          final st = _player.state;
+          final ok = st.position > Duration.zero || (st.playing && (st.width ?? 0) > 0);
+          if (!ok) setState(() => _error = true);
+        });
+      }),
+    );
     _clock = Timer.periodic(const Duration(seconds: 20), (_) => setState(() {}));
     if (widget.channels.isNotEmpty) _play(_i);
     _autoHide();
@@ -122,53 +128,59 @@ class _PlayerLivePageState extends State<PlayerLivePage> {
     final listW = 190.sdp;
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Stack(children: [
-        // Video (moves right when the channel list is open)
-        AnimatedPositioned(
-          duration: const Duration(milliseconds: 180),
-          left: _list ? listW : (_info ? 235.sdp : 0),
-          top: _list ? 30.sdp : 0,
-          right: _list ? 10.sdp : 0,
-          bottom: _list ? 30.sdp : 0,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () {
-              if (_list || _info) {
-                setState(() => _list = _info = false);
-                _autoHide();
-              } else {
-                _toggleControls();
-              }
-            },
-            child: Video(controller: _video, controls: NoVideoControls, fit: playerFits[_fit]),
+      body: Stack(
+        children: [
+          // Video (moves right when the channel list is open)
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 180),
+            left: _list ? listW : (_info ? 235.sdp : 0),
+            top: _list ? 30.sdp : 0,
+            right: _list ? 10.sdp : 0,
+            bottom: _list ? 30.sdp : 0,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                if (_list || _info) {
+                  setState(() => _list = _info = false);
+                  _autoHide();
+                } else {
+                  _toggleControls();
+                }
+              },
+              child: Video(controller: _video, controls: NoVideoControls, fit: playerFits[_fit]),
+            ),
           ),
-        ),
-        if (!_list && !_info && !_locked) ...[
-          // Center: loader / retry / play-pause
-          Center(
-            child: _error
-                ? RoundBtn('ic_reset', onTap: () => _play(_i))
-                : _buffering && !_playing
-                    ? const Loader(size: 38)
-                    : _controls
-                        ? RoundBtn(_playing ? 'ic_pause' : 'ic_play', size: 40, onTap: () {
-                            _player.playOrPause();
-                            _autoHide();
-                          })
-                        : const SizedBox(),
-          ),
-          if (_controls) ..._overlay(),
-        ],
-        if (_locked) Positioned.fill(child: LockOverlay(onUnlock: () => setState(() => _locked = false))),
-        if (_list)
-          Positioned(left: 0, top: 0, bottom: 0, width: listW, child: _channelList()),
-        if (_info)
-          Positioned(
+          if (!_list && !_info && !_locked) ...[
+            // Center: loader / retry / play-pause
+            Center(
+              child: _error
+                  ? RoundBtn('ic_reset', onTap: () => _play(_i))
+                  : _buffering && !_playing
+                  ? const Loader(size: 38)
+                  : _controls
+                  ? RoundBtn(
+                      _playing ? 'ic_pause' : 'ic_play',
+                      size: 40,
+                      onTap: () {
+                        _player.playOrPause();
+                        _autoHide();
+                      },
+                    )
+                  : const SizedBox(),
+            ),
+            if (_controls) ..._overlay(),
+          ],
+          if (_locked) Positioned.fill(child: LockOverlay(onUnlock: () => setState(() => _locked = false))),
+          if (_list) Positioned(left: 0, top: 0, bottom: 0, width: listW, child: _channelList()),
+          if (_info)
+            Positioned(
               left: 0,
               top: 0,
               bottom: 0,
-              child: TracksPanel(player: _player, onClose: () => setState(() => _info = false))),
-      ]),
+              child: TracksPanel(player: _player, onClose: () => setState(() => _info = false)),
+            ),
+        ],
+      ),
     );
   }
 
@@ -186,31 +198,40 @@ class _PlayerLivePageState extends State<PlayerLivePage> {
           padding: EdgeInsets.fromLTRB(8.sdp, 6.sdp, 8.sdp, 20.sdp),
           child: SafeArea(
             bottom: false,
-            child: Row(children: [
-              RoundBtn('ic_player_back', size: 34, onTap: () => Navigator.maybePop(context)),
-              SizedBox(width: 10.sdp),
-              PChip(S.live_tv_home),
-              SizedBox(width: 5.sdp),
-              PChip(resolutionText(_player.state.height)),
-              SizedBox(width: 5.sdp),
-              PChip(clockText(DateTime.now())),
-              const Spacer(),
-              PBtn(fav ? 'ic_favorite' : 'ic_favorite_border', pad: 4, onTap: () async {
-                final added = await Store.toggleFavorite(ch);
-                if (!mounted) return;
-                toast(context, added ? S.fav_success : S.fav_remove_success);
-                setState(() {});
-              }),
-              if (tr.subtitle.length > 2) PBtn('ic_closed_captioning', onTap: _openInfo),
-              if (tr.video.length > 3) PBtn('ic_hd', onTap: _openInfo),
-              if (tr.audio.length > 3) PBtn('ic_audiotrack', onTap: _openInfo),
-              PBtn('ic_information', pad: 4, onTap: _openInfo),
-              PBtn('ic_unlock', onTap: () => setState(() {
+            child: Row(
+              children: [
+                RoundBtn('ic_player_back', size: 34, onTap: () => Navigator.maybePop(context)),
+                SizedBox(width: 10.sdp),
+                PChip(S.live_tv_home),
+                SizedBox(width: 5.sdp),
+                PChip(resolutionText(_player.state.height)),
+                SizedBox(width: 5.sdp),
+                PChip(clockText(DateTime.now())),
+                const Spacer(),
+                PBtn(
+                  fav ? 'ic_favorite' : 'ic_favorite_border',
+                  pad: 4,
+                  onTap: () async {
+                    final added = await Store.toggleFavorite(ch);
+                    if (!mounted) return;
+                    toast(context, added ? S.fav_success : S.fav_remove_success);
+                    setState(() {});
+                  },
+                ),
+                if (tr.subtitle.length > 2) PBtn('ic_closed_captioning', onTap: _openInfo),
+                if (tr.video.length > 3) PBtn('ic_hd', onTap: _openInfo),
+                if (tr.audio.length > 3) PBtn('ic_audiotrack', onTap: _openInfo),
+                PBtn('ic_information', pad: 4, onTap: _openInfo),
+                PBtn(
+                  'ic_unlock',
+                  onTap: () => setState(() {
                     _locked = true;
                     _controls = false;
-                  })),
-              PBtn('ic_close', pad: 4, onTap: () => setState(() => _controls = false)),
-            ]),
+                  }),
+                ),
+                PBtn('ic_close', pad: 4, onTap: () => setState(() => _controls = false)),
+              ],
+            ),
           ),
         ),
       ),
@@ -224,48 +245,80 @@ class _PlayerLivePageState extends State<PlayerLivePage> {
           padding: EdgeInsets.fromLTRB(12.sdp, 25.sdp, 12.sdp, 10.sdp),
           child: SafeArea(
             top: false,
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              Row(children: [
-                PBtn('ic_skip_previous', size: 38, pad: 6, onTap: () {
-                  _play(_i - 1);
-                  _autoHide();
-                }),
-                SizedBox(width: 10.sdp),
-                Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    T(S.now_playing, size: 10, color: C.primary, weight: FontWeight.bold),
-                    T('${_i + 1}. ${ch.name}', size: 13, lines: 1, weight: FontWeight.bold),
-                  ]),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    PBtn(
+                      'ic_skip_previous',
+                      size: 38,
+                      pad: 6,
+                      onTap: () {
+                        _play(_i - 1);
+                        _autoHide();
+                      },
+                    ),
+                    SizedBox(width: 10.sdp),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          T(S.now_playing, size: 10, color: C.primary, weight: FontWeight.bold),
+                          T('${_i + 1}. ${ch.name}', size: 13, lines: 1, weight: FontWeight.bold),
+                        ],
+                      ),
+                    ),
+                    if (_epg != null) ...[
+                      SizedBox(width: 10.sdp),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            T(
+                              '${clockText(_epg!.start)} - ${clockText(_epg!.end)}',
+                              size: 10,
+                              color: C.primary,
+                              weight: FontWeight.bold,
+                            ),
+                            T(_epg!.title, size: 13, lines: 1, weight: FontWeight.bold),
+                          ],
+                        ),
+                      ),
+                    ],
+                    PBtn(
+                      'ic_skip_next',
+                      size: 38,
+                      pad: 6,
+                      onTap: () {
+                        _play(_i + 1);
+                        _autoHide();
+                      },
+                    ),
+                  ],
                 ),
-                if (_epg != null) ...[
-                  SizedBox(width: 10.sdp),
-                  Expanded(
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      T('${clockText(_epg!.start)} - ${clockText(_epg!.end)}', size: 10, color: C.primary, weight: FontWeight.bold),
-                      T(_epg!.title, size: 13, lines: 1, weight: FontWeight.bold),
-                    ]),
-                  ),
-                ],
-                PBtn('ic_skip_next', size: 38, pad: 6, onTap: () {
-                  _play(_i + 1);
-                  _autoHide();
-                }),
-              ]),
-              SizedBox(height: 10.sdp),
-              Row(children: [
-                _action('list_channels', S.channels, () => setState(() {
-                      _list = true;
-                      _controls = false;
-                    })),
-                _action('ic_multiple_screen', S.multiple_screen, () {
-                  go(context, const MultiScreenPage(), replace: true);
-                }),
-                _action('ic_crop', '${S.aspect_ratio} (${fitLabel(playerFits[_fit])})', () {
-                  setState(() => _fit = (_fit + 1) % playerFits.length);
-                  _autoHide();
-                }),
-              ]),
-            ]),
+                SizedBox(height: 10.sdp),
+                Row(
+                  children: [
+                    _action(
+                      'list_channels',
+                      S.channels,
+                      () => setState(() {
+                        _list = true;
+                        _controls = false;
+                      }),
+                    ),
+                    _action('ic_multiple_screen', S.multiple_screen, () {
+                      go(context, const MultiScreenPage(), replace: true);
+                    }),
+                    _action('ic_crop', '${S.aspect_ratio} (${fitLabel(playerFits[_fit])})', () {
+                      setState(() => _fit = (_fit + 1) % playerFits.length);
+                      _autoHide();
+                    }),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -273,24 +326,27 @@ class _PlayerLivePageState extends State<PlayerLivePage> {
   }
 
   void _openInfo() => setState(() {
-        _info = true;
-        _controls = false;
-      });
+    _info = true;
+    _controls = false;
+  });
 
   Widget _action(String icon, String text, VoidCallback onTap) => Expanded(
-        child: Tap(
-          onTap: onTap,
-          builder: (f) => Container(
-            padding: EdgeInsets.all(6.sdp),
-            color: f ? const Color(0x2DFFFFFF) : Colors.transparent,
-            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              Ic(icon, size: 20.sdp),
-              SizedBox(width: 6.sdp),
-              Flexible(child: T(text, size: 12, lines: 1)),
-            ]),
-          ),
+    child: Tap(
+      onTap: onTap,
+      builder: (f) => Container(
+        padding: EdgeInsets.all(6.sdp),
+        color: f ? const Color(0x2DFFFFFF) : Colors.transparent,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Ic(icon, size: 20.sdp),
+            SizedBox(width: 6.sdp),
+            Flexible(child: T(text, size: 12, lines: 1)),
+          ],
         ),
-      );
+      ),
+    ),
+  );
 
   /// row_player_live list on the left.
   Widget _channelList() {
@@ -317,19 +373,31 @@ class _PlayerLivePageState extends State<PlayerLivePage> {
                   borderRadius: BorderRadius.circular(5.sdp),
                   border: Border.all(color: f ? Colors.white : const Color(0xFF1E1F22), width: 1.sdp),
                 ),
-                child: Row(children: [
-                  Expanded(
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                      T('${i + 1}', size: 13, color: color),
-                      T(c.name, size: 11, color: color, lines: 2),
-                    ]),
-                  ),
-                  SizedBox(width: 4.sdp),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4.sdp),
-                    child: NetImg(c.icon, placeholder: 'placeholder_live', width: 50.sdp, height: 50.sdp, fit: BoxFit.contain),
-                  ),
-                ]),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          T('${i + 1}', size: 13, color: color),
+                          T(c.name, size: 11, color: color, lines: 2),
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: 4.sdp),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4.sdp),
+                      child: NetImg(
+                        c.icon,
+                        placeholder: 'placeholder_live',
+                        width: 50.sdp,
+                        height: 50.sdp,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           },

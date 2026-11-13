@@ -1,5 +1,6 @@
 // Catch up (CatchUpActivity -> CatchUpLiveActivity -> CatchUpEpgActivity).
 import 'package:material_ui/material_ui.dart';
+
 import '../models.dart';
 import '../session.dart';
 import '../ui/kit.dart';
@@ -47,7 +48,8 @@ class _CatchUpEpgPageState extends State<CatchUpEpgPage> {
     }
   }
 
-  static String _key(DateTime d) => '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+  static String _key(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
   List<String> _days(List<EpgEntry> l) => l.map((e) => _key(e.start)).toSet().toList()..sort();
 
@@ -77,43 +79,49 @@ class _CatchUpEpgPageState extends State<CatchUpEpgPage> {
     return PageBg(
       child: Padding(
         padding: EdgeInsets.all(5.sdp),
-        child: Column(children: [
-          PageTop(title: widget.channel.name, icon: 'list_channels'),
-          if (days.isNotEmpty)
-            SizedBox(
-              height: 30.sdp,
-              child: ListView(scrollDirection: Axis.horizontal, reverse: true, children: [
-                for (final d in days.reversed)
-                  Padding(
-                    padding: EdgeInsets.only(left: 5.sdp),
-                    child: Tap(
-                      onTap: () => setState(() => _day = d),
-                      builder: (f) => Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12.sdp),
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: const Color(0x12FFFFFF),
-                          borderRadius: BorderRadius.circular(1.sdp),
-                          border: Border.all(color: f ? const Color(0xFFFFAB00) : C.border, width: 1.sdp),
+        child: Column(
+          children: [
+            PageTop(title: widget.channel.name, icon: 'list_channels'),
+            if (days.isNotEmpty)
+              SizedBox(
+                height: 30.sdp,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  reverse: true,
+                  children: [
+                    for (final d in days.reversed)
+                      Padding(
+                        padding: EdgeInsets.only(left: 5.sdp),
+                        child: Tap(
+                          onTap: () => setState(() => _day = d),
+                          builder: (f) => Container(
+                            padding: EdgeInsets.symmetric(horizontal: 12.sdp),
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: const Color(0x12FFFFFF),
+                              borderRadius: BorderRadius.circular(1.sdp),
+                              border: Border.all(color: f ? const Color(0xFFFFAB00) : C.border, width: 1.sdp),
+                            ),
+                            child: T(_label(d), size: 12, color: d == _day ? C.select : Colors.white),
+                          ),
                         ),
-                        child: T(_label(d), size: 12, color: d == _day ? C.select : Colors.white),
                       ),
+                  ],
+                ),
+              ),
+            SizedBox(height: 5.sdp),
+            Expanded(
+              child: all == null
+                  ? const Loader()
+                  : list.isEmpty
+                  ? Empty(S.err_no_data_found)
+                  : ListView.builder(
+                      itemCount: list.length,
+                      itemBuilder: (_, i) => EpgRow(entry: list[i], onTap: () => _play(list[i])),
                     ),
-                  ),
-              ]),
             ),
-          SizedBox(height: 5.sdp),
-          Expanded(
-            child: all == null
-                ? const Loader()
-                : list.isEmpty
-                    ? Empty(S.err_no_data_found)
-                    : ListView.builder(
-                        itemCount: list.length,
-                        itemBuilder: (_, i) => EpgRow(entry: list[i], onTap: () => _play(list[i])),
-                      ),
-          ),
-        ]),
+          ],
+        ),
       ),
     );
   }

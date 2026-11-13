@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
@@ -32,26 +33,26 @@ class DownloadItem {
   double get progress => total > 0 ? received / total : 0;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'icon': icon,
-        'url': url,
-        'path': path,
-        'status': status == DlStatus.done ? 'done' : 'failed',
-        'received': received,
-        'total': total,
-      };
+    'id': id,
+    'title': title,
+    'icon': icon,
+    'url': url,
+    'path': path,
+    'status': status == DlStatus.done ? 'done' : 'failed',
+    'received': received,
+    'total': total,
+  };
 
   factory DownloadItem.fromJson(Map<String, dynamic> j) => DownloadItem(
-        id: j['id'],
-        title: j['title'] ?? '',
-        icon: j['icon'] ?? '',
-        url: j['url'] ?? '',
-        path: j['path'] ?? '',
-        status: j['status'] == 'done' ? DlStatus.done : DlStatus.failed,
-        received: j['received'] ?? 0,
-        total: j['total'] ?? 0,
-      );
+    id: j['id'],
+    title: j['title'] ?? '',
+    icon: j['icon'] ?? '',
+    url: j['url'] ?? '',
+    path: j['path'] ?? '',
+    status: j['status'] == 'done' ? DlStatus.done : DlStatus.failed,
+    received: j['received'] ?? 0,
+    total: j['total'] ?? 0,
+  );
 }
 
 /// Downloads movies and episodes to the phone for offline viewing.
@@ -80,8 +81,7 @@ class Downloads extends ChangeNotifier {
 
   Future<void> _save() async {
     final p = await SharedPreferences.getInstance();
-    await p.setStringList(
-        'downloads', items.map((d) => jsonEncode(d.toJson())).toList());
+    await p.setStringList('downloads', items.map((d) => jsonEncode(d.toJson())).toList());
   }
 
   DownloadItem? find(String id) {
@@ -91,11 +91,7 @@ class Downloads extends ChangeNotifier {
     return null;
   }
 
-  Future<void> start(
-      {required String id,
-      required String title,
-      required String icon,
-      required String url}) async {
+  Future<void> start({required String id, required String title, required String icon, required String url}) async {
     await load();
     final existing = find(id);
     if (existing != null && existing.status != DlStatus.failed) return;
@@ -120,8 +116,7 @@ class Downloads extends ChangeNotifier {
     _clients[item.id] = client;
     IOSink? sink;
     try {
-      final req = http.Request('GET', Uri.parse(item.url))
-        ..headers['User-Agent'] = 'IPTVSmartersPro';
+      final req = http.Request('GET', Uri.parse(item.url))..headers['User-Agent'] = 'IPTVSmartersPro';
       final res = await client.send(req);
       if (res.statusCode != 200) throw Exception('HTTP ${res.statusCode}');
       item.total = res.contentLength ?? 0;

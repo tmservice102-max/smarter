@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:typed_data';
+
 import 'package:http/http.dart' as http;
+
 import '../models.dart';
 import 'source.dart';
 
@@ -28,9 +30,7 @@ class M3uSource implements ContentSource {
       final bytes = await File(path).readAsBytes();
       return _items = await _parseInBackground(bytes);
     }
-    final res = await http
-        .get(Uri.parse(account.server))
-        .timeout(const Duration(seconds: 90));
+    final res = await http.get(Uri.parse(account.server)).timeout(const Duration(seconds: 90));
     if (res.statusCode != 200) {
       throw Exception('Playlist error ${res.statusCode}');
     }
@@ -60,9 +60,7 @@ class M3uSource implements ContentSource {
       final line = raw.trim();
       if (line.isEmpty) continue;
       if (line.startsWith('#EXTINF')) {
-        final attrs = {
-          for (final m in attr.allMatches(line)) m.group(1)!: m.group(2)!
-        };
+        final attrs = {for (final m in attr.allMatches(line)) m.group(1)!: m.group(2)!};
         final comma = line.lastIndexOf(',');
         name = comma >= 0 ? line.substring(comma + 1).trim() : 'Channel';
         if (name.isEmpty) name = attrs['tvg-name'] ?? 'Channel';
@@ -76,20 +74,21 @@ class M3uSource implements ContentSource {
         final gid = _groupIds.putIfAbsent(g, () => '${_groupIds.length + 1}');
         final lower = line.toLowerCase();
         ContentType type = ContentType.live;
-        if (lower.contains('/movie/') ||
-            RegExp(r'\.(mp4|mkv|avi|mov)(\?|$)').hasMatch(lower)) {
+        if (lower.contains('/movie/') || RegExp(r'\.(mp4|mkv|avi|mov)(\?|$)').hasMatch(lower)) {
           type = ContentType.movie;
         }
         if (lower.contains('/series/')) type = ContentType.movie;
-        out.add(StreamItem(
-          type: type,
-          id: '${i++}',
-          name: name ?? line,
-          icon: logo ?? '',
-          categoryId: gid,
-          epgId: tvgId ?? '',
-          directUrl: line,
-        ));
+        out.add(
+          StreamItem(
+            type: type,
+            id: '${i++}',
+            name: name ?? line,
+            icon: logo ?? '',
+            categoryId: gid,
+            epgId: tvgId ?? '',
+            directUrl: line,
+          ),
+        );
         name = logo = tvgId = null;
       }
     }
@@ -106,32 +105,22 @@ class M3uSource implements ContentSource {
     for (final it in items) {
       if (it.type == type) used.add(it.categoryId);
     }
-    return _groupIds.entries
-        .where((e) => used.contains(e.value))
-        .map((e) => Category(e.value, e.key))
-        .toList();
+    return _groupIds.entries.where((e) => used.contains(e.value)).map((e) => Category(e.value, e.key)).toList();
   }
 
   @override
-  Future<List<StreamItem>> streams(ContentType type,
-      {String? categoryId}) async {
+  Future<List<StreamItem>> streams(ContentType type, {String? categoryId}) async {
     final items = await _load();
     return items
-        .where((it) =>
-            it.type == type &&
-            (categoryId == null ||
-                categoryId.isEmpty ||
-                it.categoryId == categoryId))
+        .where((it) => it.type == type && (categoryId == null || categoryId.isEmpty || it.categoryId == categoryId))
         .toList();
   }
 
   @override
-  Future<MovieInfo> movieInfo(StreamItem item) async =>
-      MovieInfo(cover: item.icon);
+  Future<MovieInfo> movieInfo(StreamItem item) async => MovieInfo(cover: item.icon);
 
   @override
-  Future<SeriesInfo> seriesInfo(StreamItem item) async =>
-      SeriesInfo(MovieInfo(cover: item.icon), {});
+  Future<SeriesInfo> seriesInfo(StreamItem item) async => SeriesInfo(MovieInfo(cover: item.icon), {});
 
   @override
   Future<List<EpgEntry>> shortEpg(StreamItem channel) async => [];
@@ -148,4 +137,3 @@ class M3uSource implements ContentSource {
   @override
   String episodeUrl(Episode ep) => '';
 }
-

@@ -1,6 +1,7 @@
 // Series details (DetailsSeriesActivity / activity_details_series):
 // info on top, seasons as chips, episodes as cards below.
 import 'package:material_ui/material_ui.dart';
+
 import '../models.dart';
 import '../session.dart';
 import '../store.dart';
@@ -67,119 +68,145 @@ class _DetailsSeriesPageState extends State<DetailsSeriesPage> {
     final rating = (info?.rating.isNotEmpty ?? false) ? info!.rating : item.rating;
     return BlurBg(
       image: (info?.backdrop.isNotEmpty ?? false) ? info!.backdrop : cover,
-      child: CustomScrollView(slivers: [
-        SliverPadding(
-          padding: EdgeInsets.all(5.sdp),
-          sliver: SliverToBoxAdapter(
-            child: PageTop(title: _info == null ? S.series_home : item.name, icon: 'ic_series', trailing: [
-              TopBtn(fav ? 'ic_favorite' : 'ic_favorite_border', onTap: () async {
-                final added = await Store.toggleFavorite(item);
-                if (!context.mounted) return;
-                toast(context, added ? S.fav_success : S.fav_remove_success);
-                setState(() {});
-              }),
-              TopBtn('ic_filter_list', onTap: () => setState(() => _reverse = !_reverse)),
-              TopBtn('ic_feedback', onTap: () => feedbackDialog(context, item.name)),
-            ]),
-          ),
-        ),
-        SliverPadding(
-          padding: EdgeInsets.only(left: 10.sdp, right: 5.sdp),
-          sliver: SliverToBoxAdapter(
-            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Expanded(
-                flex: 8,
-                child: Column(children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4.sdp),
-                    child: SizedBox(height: 150.sdp, width: double.infinity, child: NetImg(cover)),
-                  ),
-                  SizedBox(height: 6.sdp),
-                  Stars(rating, tenScale: true),
-                ]),
-              ),
-              SizedBox(width: 15.sdp),
-              Expanded(
-                flex: 30,
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  InfoTable([
-                    (S.directed_by, T(na(info?.director ?? ''), size: 10)),
-                    (S.release_date, T(na(info?.releaseDate ?? ''), size: 10)),
-                    (S.genre, T(na(info?.genre ?? ''), size: 10)),
-                    ('Plot:', T(na(info?.plot ?? ''), size: 10, lines: 6)),
-                  ]),
-                  if (info != null && info.trailer.isNotEmpty)
-                    Padding(
-                      padding: EdgeInsets.only(left: 10.sdp, top: 4.sdp),
-                      child: SizedBox(
-                        width: 110.sdp,
-                        child: SaveBtn(
-                          icon: 'ic_smart_display',
-                          text: S.trailer,
-                          onTap: () => openExternal(info.trailer.startsWith('http')
-                              ? info.trailer
-                              : 'https://www.youtube.com/watch?v=${info.trailer}'),
-                        ),
-                      ),
-                    ),
-                ]),
-              ),
-            ]),
-          ),
-        ),
-        if (_loading)
-          SliverToBoxAdapter(child: Padding(padding: EdgeInsets.all(20.sdp), child: const Loader()))
-        else ...[
-          // Seasons (row_seasons_list)
+      child: CustomScrollView(
+        slivers: [
           SliverPadding(
-            padding: EdgeInsets.fromLTRB(10.sdp, 8.sdp, 5.sdp, 0),
+            padding: EdgeInsets.all(5.sdp),
             sliver: SliverToBoxAdapter(
-              child: SizedBox(
-                height: 30.sdp,
-                child: ListView(scrollDirection: Axis.horizontal, children: [
-                  for (final s in seasons)
-                    Padding(
-                      padding: EdgeInsets.only(right: 6.sdp),
-                      child: Tap(
-                        onTap: () => setState(() => _season = s),
-                        builder: (f) => Container(
-                          padding: EdgeInsets.symmetric(horizontal: 14.sdp),
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: C.fill,
-                            borderRadius: BorderRadius.circular(f ? 2.sdp : 50.sdp),
-                            border: Border.all(color: f ? C.select : C.border, width: f ? 2.sdp : 1.sdp),
-                          ),
-                          child: T('Season $s', size: 12, color: s == _season ? C.select : Colors.white),
-                        ),
-                      ),
-                    ),
-                ]),
+              child: PageTop(
+                title: _info == null ? S.series_home : item.name,
+                icon: 'ic_series',
+                trailing: [
+                  TopBtn(
+                    fav ? 'ic_favorite' : 'ic_favorite_border',
+                    onTap: () async {
+                      final added = await Store.toggleFavorite(item);
+                      if (!context.mounted) return;
+                      toast(context, added ? S.fav_success : S.fav_remove_success);
+                      setState(() {});
+                    },
+                  ),
+                  TopBtn('ic_filter_list', onTap: () => setState(() => _reverse = !_reverse)),
+                  TopBtn('ic_feedback', onTap: () => feedbackDialog(context, item.name)),
+                ],
               ),
             ),
           ),
-          if (eps.isEmpty)
+          SliverPadding(
+            padding: EdgeInsets.only(left: 10.sdp, right: 5.sdp),
+            sliver: SliverToBoxAdapter(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 8,
+                    child: Column(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4.sdp),
+                          child: SizedBox(height: 150.sdp, width: double.infinity, child: NetImg(cover)),
+                        ),
+                        SizedBox(height: 6.sdp),
+                        Stars(rating, tenScale: true),
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: 15.sdp),
+                  Expanded(
+                    flex: 30,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        InfoTable([
+                          (S.directed_by, T(na(info?.director ?? ''), size: 10)),
+                          (S.release_date, T(na(info?.releaseDate ?? ''), size: 10)),
+                          (S.genre, T(na(info?.genre ?? ''), size: 10)),
+                          ('Plot:', T(na(info?.plot ?? ''), size: 10, lines: 6)),
+                        ]),
+                        if (info != null && info.trailer.isNotEmpty)
+                          Padding(
+                            padding: EdgeInsets.only(left: 10.sdp, top: 4.sdp),
+                            child: SizedBox(
+                              width: 110.sdp,
+                              child: SaveBtn(
+                                icon: 'ic_smart_display',
+                                text: S.trailer,
+                                onTap: () => openExternal(
+                                  info.trailer.startsWith('http')
+                                      ? info.trailer
+                                      : 'https://www.youtube.com/watch?v=${info.trailer}',
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (_loading)
             SliverToBoxAdapter(
-              child: Center(
-                child: Container(
-                  margin: EdgeInsets.all(15.sdp),
-                  padding: EdgeInsets.symmetric(horizontal: 15.sdp, vertical: 8.sdp),
-                  decoration: BoxDecoration(
-                      color: const Color(0x45000000), borderRadius: BorderRadius.circular(4.sdp)),
-                  child: T(S.err_no_episodes_found, size: 12, color: C.primary, weight: FontWeight.bold),
+              child: Padding(padding: EdgeInsets.all(20.sdp), child: const Loader()),
+            )
+          else ...[
+            // Seasons (row_seasons_list)
+            SliverPadding(
+              padding: EdgeInsets.fromLTRB(10.sdp, 8.sdp, 5.sdp, 0),
+              sliver: SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 30.sdp,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      for (final s in seasons)
+                        Padding(
+                          padding: EdgeInsets.only(right: 6.sdp),
+                          child: Tap(
+                            onTap: () => setState(() => _season = s),
+                            builder: (f) => Container(
+                              padding: EdgeInsets.symmetric(horizontal: 14.sdp),
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: C.fill,
+                                borderRadius: BorderRadius.circular(f ? 2.sdp : 50.sdp),
+                                border: Border.all(color: f ? C.select : C.border, width: f ? 2.sdp : 1.sdp),
+                              ),
+                              child: T('Season $s', size: 12, color: s == _season ? C.select : Colors.white),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
-            )
-          else
-            SliverPadding(
-              padding: EdgeInsets.fromLTRB(10.sdp, 6.sdp, 5.sdp, 15.sdp),
-              sliver: SliverList.builder(
-                itemCount: eps.length,
-                itemBuilder: (_, i) => _EpisodeRow(ep: eps[i], fallback: cover, onTap: () => _play(i)),
-              ),
             ),
+            if (eps.isEmpty)
+              SliverToBoxAdapter(
+                child: Center(
+                  child: Container(
+                    margin: EdgeInsets.all(15.sdp),
+                    padding: EdgeInsets.symmetric(horizontal: 15.sdp, vertical: 8.sdp),
+                    decoration: BoxDecoration(
+                      color: const Color(0x45000000),
+                      borderRadius: BorderRadius.circular(4.sdp),
+                    ),
+                    child: T(S.err_no_episodes_found, size: 12, color: C.primary, weight: FontWeight.bold),
+                  ),
+                ),
+              )
+            else
+              SliverPadding(
+                padding: EdgeInsets.fromLTRB(10.sdp, 6.sdp, 5.sdp, 15.sdp),
+                sliver: SliverList.builder(
+                  itemCount: eps.length,
+                  itemBuilder: (_, i) => _EpisodeRow(ep: eps[i], fallback: cover, onTap: () => _play(i)),
+                ),
+              ),
+          ],
         ],
-      ]),
+      ),
     );
   }
 }
@@ -206,67 +233,85 @@ class _EpisodeRow extends StatelessWidget {
           borderRadius: BorderRadius.circular(4.sdp),
           border: Border.all(color: f ? C.select : const Color(0x33000000), width: f ? 2.sdp : 1.sdp),
         ),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          SizedBox(
-            width: 130.sdp,
-            child: Stack(fit: StackFit.expand, children: [
-              ClipRRect(
-                borderRadius: BorderRadius.horizontal(left: Radius.circular(4.sdp)),
-                child: NetImg(ep.image.isNotEmpty ? ep.image : fallback, placeholder: 'placeholder_horizontal'),
-              ),
-              Center(
-                child: Container(
-                  decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0x2DFFFFFF)),
-                  child: Ic('ic_play', size: 22.sdp, pad: 2.sdp),
-                ),
-              ),
-              if (pos > 0 && secs > 0)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: LinearProgressIndicator(
-                    value: (pos / secs).clamp(0, 1),
-                    minHeight: 2.sdp,
-                    color: C.select,
-                    backgroundColor: const Color(0x55FFFFFF),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
+              width: 130.sdp,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.horizontal(left: Radius.circular(4.sdp)),
+                    child: NetImg(ep.image.isNotEmpty ? ep.image : fallback, placeholder: 'placeholder_horizontal'),
                   ),
-                ),
-            ]),
-          ),
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(8.sdp, 5.sdp, 5.sdp, 3.sdp),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                T(ep.title.isEmpty ? 'Episode ${ep.number}' : ep.title, size: 10, lines: 2),
-                SizedBox(height: 2.sdp),
-                if (ep.rating.isNotEmpty && ep.rating != '0') Stars(ep.rating, size: 11, tenScale: true),
-                SizedBox(height: 2.sdp),
-                if (ep.duration.isNotEmpty)
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 4.sdp, vertical: 1.sdp),
-                    decoration: BoxDecoration(
-                      color: const Color(0x40838383),
-                      borderRadius: BorderRadius.circular(2.sdp),
+                  Center(
+                    child: Container(
+                      decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0x2DFFFFFF)),
+                      child: Ic('ic_play', size: 22.sdp, pad: 2.sdp),
                     ),
-                    child: T(durationText(ep.duration), size: 8),
                   ),
-                const Spacer(),
-                if (canDownload)
-                  Row(children: [
-                    Expanded(child: DownloadLine(key)),
-                    IconTap('iv_downloading', size: 26, pad: 4, onTap: () {
-                      startDownload(context,
-                          id: key,
-                          title: ep.title.isEmpty ? 'Episode ${ep.number}' : ep.title,
-                          icon: ep.image.isNotEmpty ? ep.image : fallback,
-                          url: Session.src.episodeUrl(ep));
-                    }),
-                  ]),
-              ]),
+                  if (pos > 0 && secs > 0)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: LinearProgressIndicator(
+                        value: (pos / secs).clamp(0, 1),
+                        minHeight: 2.sdp,
+                        color: C.select,
+                        backgroundColor: const Color(0x55FFFFFF),
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
-        ]),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(8.sdp, 5.sdp, 5.sdp, 3.sdp),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    T(ep.title.isEmpty ? 'Episode ${ep.number}' : ep.title, size: 10, lines: 2),
+                    SizedBox(height: 2.sdp),
+                    if (ep.rating.isNotEmpty && ep.rating != '0') Stars(ep.rating, size: 11, tenScale: true),
+                    SizedBox(height: 2.sdp),
+                    if (ep.duration.isNotEmpty)
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 4.sdp, vertical: 1.sdp),
+                        decoration: BoxDecoration(
+                          color: const Color(0x40838383),
+                          borderRadius: BorderRadius.circular(2.sdp),
+                        ),
+                        child: T(durationText(ep.duration), size: 8),
+                      ),
+                    const Spacer(),
+                    if (canDownload)
+                      Row(
+                        children: [
+                          Expanded(child: DownloadLine(key)),
+                          IconTap(
+                            'iv_downloading',
+                            size: 26,
+                            pad: 4,
+                            onTap: () {
+                              startDownload(
+                                context,
+                                id: key,
+                                title: ep.title.isEmpty ? 'Episode ${ep.number}' : ep.title,
+                                icon: ep.image.isNotEmpty ? ep.image : fallback,
+                                url: Session.src.episodeUrl(ep),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,8 +1,10 @@
 // Add M3U playlist (AddPlaylistActivity / activity_sign_in_playlist.xml).
 import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:path_provider/path_provider.dart';
+
 import '../library.dart';
 import '../models.dart';
 import '../store.dart';
@@ -70,63 +72,81 @@ class _AddPlaylistPageState extends State<AddPlaylistPage> {
   }
 
   Widget _radio(String text, bool on, VoidCallback tap) => Expanded(
-        child: Tap(
-          onTap: tap,
-          builder: (f) => Container(
-            height: 30.sdp,
-            decoration: BoxDecoration(
-                color: f ? const Color(0x2DFFFFFF) : null, borderRadius: BorderRadius.circular(2.sdp)),
-            child: Row(children: [
-              Icon(on ? Icons.radio_button_checked : Icons.radio_button_off, color: Colors.white, size: 16.sdp),
-              SizedBox(width: 6.sdp),
-              T(text, size: 10, color: C.title),
-            ]),
-          ),
+    child: Tap(
+      onTap: tap,
+      builder: (f) => Container(
+        height: 30.sdp,
+        decoration: BoxDecoration(
+          color: f ? const Color(0x2DFFFFFF) : null,
+          borderRadius: BorderRadius.circular(2.sdp),
         ),
-      );
+        child: Row(
+          children: [
+            Icon(on ? Icons.radio_button_checked : Icons.radio_button_off, color: Colors.white, size: 16.sdp),
+            SizedBox(width: 6.sdp),
+            T(text, size: 10, color: C.title),
+          ],
+        ),
+      ),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
     return LoginLayout(
-      side: LoginSide(buttons: [
-        UiButton(text: S.list_users, onTap: () => go(context, const UsersListPage(), replace: true)),
-      ]),
+      side: LoginSide(
+        buttons: [
+          UiButton(
+            text: S.list_users,
+            icon: 'ic_shield_user',
+            onTap: () => go(context, const UsersListPage(), replace: true),
+          ),
+        ],
+      ),
       form: Container(
         padding: EdgeInsets.all(15.sdp),
         decoration: cardSub(),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          T(S.add_m3u_playlist, size: 11, color: C.title),
-          SizedBox(height: 8.sdp),
-          PillField(icon: 'ic_profile', hint: S.any_name, controller: _name),
-          SizedBox(height: 4.sdp),
-          Row(children: [
-            _radio(S.file, _file, () => setState(() => _file = true)),
-            SizedBox(width: 10.sdp),
-            _radio(S.m3u_url, !_file, () => setState(() => _file = false)),
-            const Spacer(flex: 1),
-          ]),
-          SizedBox(height: 4.sdp),
-          if (_file)
-            Row(children: [
-              Tap(
-                onTap: _browse,
-                builder: (f) => Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12.sdp, vertical: 5.sdp),
-                  decoration: BoxDecoration(
-                      gradient: f ? null : G.primaryBtn,
-                      color: f ? const Color(0xFFFFB347) : null,
-                      borderRadius: BorderRadius.circular(3.sdp)),
-                  child: T(S.browse, size: 14),
-                ),
-              ),
-              SizedBox(width: 5.sdp),
-              Expanded(child: T(_fileName, size: 13, lines: 1)),
-            ])
-          else
-            PillField(icon: 'ic_link', hint: S.url_here_com_port, controller: _url, keyboard: TextInputType.url),
-          SizedBox(height: 10.sdp),
-          GradButton(text: S.add_playlist, icon: 'ic_add_circle', loading: _busy, onTap: _add),
-        ]),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            T(S.add_m3u_playlist, size: 11, color: C.title),
+            SizedBox(height: 8.sdp),
+            PillField(icon: 'ic_profile', hint: S.any_name, controller: _name),
+            SizedBox(height: 4.sdp),
+            Row(
+              children: [
+                _radio(S.file, _file, () => setState(() => _file = true)),
+                SizedBox(width: 10.sdp),
+                _radio(S.m3u_url, !_file, () => setState(() => _file = false)),
+                const Spacer(flex: 1),
+              ],
+            ),
+            SizedBox(height: 4.sdp),
+            if (_file)
+              Row(
+                children: [
+                  Tap(
+                    onTap: _browse,
+                    builder: (f) => Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12.sdp, vertical: 5.sdp),
+                      decoration: BoxDecoration(
+                        gradient: f ? null : G.primaryBtn,
+                        color: f ? const Color(0xFFFFB347) : null,
+                        borderRadius: BorderRadius.circular(3.sdp),
+                      ),
+                      child: T(S.browse, size: 14),
+                    ),
+                  ),
+                  SizedBox(width: 5.sdp),
+                  Expanded(child: T(_fileName, size: 13, lines: 1)),
+                ],
+              )
+            else
+              PillField(icon: 'ic_link', hint: S.url_here_com_port, controller: _url, keyboard: TextInputType.url),
+            SizedBox(height: 10.sdp),
+            GradButton(text: S.add_playlist, icon: 'ic_add_circle', loading: _busy, onTap: _add),
+          ],
+        ),
       ),
     );
   }
