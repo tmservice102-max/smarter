@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
 
+import '../ads.dart';
 import '../api/source.dart';
 import '../library.dart';
 import '../models.dart';
@@ -164,6 +165,7 @@ class _HomePageState extends State<HomePage> with HomeActions {
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _popupAd();
+      Ads.start();
       if (widget.autoLoad) _autoLoad();
     });
   }

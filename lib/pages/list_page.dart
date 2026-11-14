@@ -2,6 +2,7 @@
 // with activity_list.xml): categories on the left, grid on the right.
 import 'package:material_ui/material_ui.dart';
 
+import '../ads.dart';
 import '../library.dart';
 import '../models.dart';
 import '../parental.dart';
@@ -186,6 +187,16 @@ class _ListPageState extends State<ListPage> {
                 title: typeTitle(t),
                 // activity_list keeps the same list icon for all three.
                 icon: 'list_channels',
+                // ll_adView: LiveTvActivity uses the EPG banner switch.
+                middle: widget.pick
+                    ? null
+                    : AdBanner(
+                        show: switch (t) {
+                          ContentType.live => Ads.bannerEpg,
+                          ContentType.movie => Ads.bannerMovie,
+                          ContentType.series => Ads.bannerSeries,
+                        },
+                      ),
                 trailing: [
                   if (!widget.playlist)
                     TopBtn(
@@ -346,7 +357,11 @@ class _Grid extends StatelessWidget {
       itemBuilder: (context, i) => PosterCard(
         item: items[i],
         live: live,
-        onTap: () => pick ? Navigator.pop(context, items[i]) : openItem(context, items[i], items),
+        onTap: () => pick
+            ? Navigator.pop(context, items[i])
+            : Ads.inter(() {
+                if (context.mounted) openItem(context, items[i], items);
+              }),
       ),
     );
   }

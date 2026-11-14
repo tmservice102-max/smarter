@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
+import '../ads.dart';
 import '../library.dart';
 import '../models.dart';
 import '../parental.dart';
@@ -165,15 +166,17 @@ class _EpgCategoriesPageState extends State<EpgCategoriesPage> {
                           name: c.name,
                           // CategoriesActivity shows folders, CatchUpActivity a TV.
                           icon: widget.catchUp ? 'ic_tv' : 'ic_folders',
-                          onTap: () async {
-                            if (!await Parental.check(context, c.name) || !context.mounted) return;
+                          onTap: () => Ads.inter(() async {
+                            if (!context.mounted || !await Parental.check(context, c.name) || !context.mounted) {
+                              return;
+                            }
                             final list = _channels(c.id);
                             if (widget.catchUp) {
                               go(context, CatchUpChannelsPage(title: c.name, channels: list));
                             } else {
                               go(context, EpgPage(title: c.name, channels: list));
                             }
-                          },
+                          }),
                         );
                       },
                     ),
@@ -363,6 +366,8 @@ class _EpgPageState extends State<EpgPage> {
                                         ),
                                 ),
                               ),
+                              // activity_epg_one: banner under the guide.
+                              AdBanner(show: Ads.bannerEpg),
                             ],
                           ),
                         ),
@@ -519,7 +524,9 @@ class _CatchUpChannelsPageState extends State<CatchUpChannelsPage> {
                       itemBuilder: (_, i) => CatTile(
                         name: list[i].name,
                         logo: list[i].icon,
-                        onTap: () => go(context, CatchUpEpgPage(channel: list[i])),
+                        onTap: () => Ads.inter(() {
+                          if (context.mounted) go(context, CatchUpEpgPage(channel: list[i]));
+                        }),
                       ),
                     ),
             ),

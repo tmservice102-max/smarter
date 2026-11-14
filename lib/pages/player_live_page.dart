@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
+import '../ads.dart';
 import '../models.dart';
 import '../session.dart';
 import '../store.dart';
@@ -43,11 +44,19 @@ class _PlayerLivePageState extends State<PlayerLivePage> {
 
   StreamItem get ch => widget.channels[_i];
 
+  // ExoPlayerLiveActivity.startTimer: one rewarded ad after N minutes.
+  final _reward = RewardTimer('reward_ad_on_live');
+
   @override
   void initState() {
     super.initState();
     playerEnter();
-    _subs.add(_player.stream.playing.listen((v) => setState(() => _playing = v)));
+    _subs.add(
+      _player.stream.playing.listen((v) {
+        setState(() => _playing = v);
+        if (v) _reward.start(playing: () => _player.state.playing, pause: _player.pause, play: _player.play);
+      }),
+    );
     _subs.add(_player.stream.buffering.listen((v) => setState(() => _buffering = v)));
     _subs.add(_player.stream.height.listen((_) => setState(() {})));
     _subs.add(_player.stream.tracks.listen((_) => setState(() {})));
@@ -110,6 +119,7 @@ class _PlayerLivePageState extends State<PlayerLivePage> {
 
   @override
   void dispose() {
+    _reward.cancel();
     _hide?.cancel();
     _clock?.cancel();
     for (final s in _subs) {

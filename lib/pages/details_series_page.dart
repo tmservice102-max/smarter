@@ -2,6 +2,7 @@
 // info on top, seasons as chips, episodes as cards below.
 import 'package:material_ui/material_ui.dart';
 
+import '../ads.dart';
 import '../downloads.dart';
 import '../models.dart';
 import '../session.dart';
@@ -140,6 +141,11 @@ class _DetailsSeriesPageState extends State<DetailsSeriesPage> {
                               ),
                             ),
                           ),
+                        // ll_adView under the series info.
+                        Padding(
+                          padding: EdgeInsets.only(top: 5.sdp),
+                          child: Center(child: AdBanner(show: Ads.bannerSeries)),
+                        ),
                       ],
                     ),
                   ),
@@ -208,7 +214,13 @@ class _DetailsSeriesPageState extends State<DetailsSeriesPage> {
                 padding: EdgeInsets.fromLTRB(10.sdp, 6.sdp, 5.sdp, 15.sdp),
                 sliver: SliverList.builder(
                   itemCount: eps.length,
-                  itemBuilder: (_, i) => _EpisodeRow(ep: eps[i], fallback: cover, onTap: () => _play(i)),
+                  itemBuilder: (_, i) => _EpisodeRow(
+                    ep: eps[i],
+                    fallback: cover,
+                    onTap: () => Ads.inter(() {
+                      if (mounted) _play(i);
+                    }),
+                  ),
                 ),
               ),
           ],

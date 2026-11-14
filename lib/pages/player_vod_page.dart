@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
+import '../ads.dart';
 import '../models.dart';
 import '../session.dart';
 import '../store.dart';
@@ -54,6 +55,9 @@ class _VodPlayerPageState extends State<VodPlayerPage> {
   late int _ep = widget.start;
   bool get _isEpisodes => widget.episodes.isNotEmpty;
 
+  // ExoPlayerActivity.startTimer: one rewarded ad after N minutes.
+  late final _reward = RewardTimer(_isEpisodes ? 'reward_ad_on_episodes' : 'reward_ad_on_movie');
+
   bool _controls = true;
   bool _locked = false;
   bool _list = false;
@@ -73,7 +77,12 @@ class _VodPlayerPageState extends State<VodPlayerPage> {
   void initState() {
     super.initState();
     playerEnter();
-    _subs.add(_player.stream.playing.listen((v) => setState(() => _playing = v)));
+    _subs.add(
+      _player.stream.playing.listen((v) {
+        setState(() => _playing = v);
+        if (v) _reward.start(playing: () => _player.state.playing, pause: _player.pause, play: _player.play);
+      }),
+    );
     _subs.add(_player.stream.buffering.listen((v) => setState(() => _buffering = v)));
     _subs.add(_player.stream.duration.listen((d) => setState(() => _dur = d)));
     _subs.add(
@@ -161,6 +170,7 @@ class _VodPlayerPageState extends State<VodPlayerPage> {
 
   @override
   void dispose() {
+    _reward.cancel();
     _savePos();
     _hide?.cancel();
     _save?.cancel();

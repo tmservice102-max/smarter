@@ -493,7 +493,17 @@ class PageTop extends StatelessWidget {
   final String icon;
   final List<Widget> trailing;
   final VoidCallback? onBack;
-  const PageTop({super.key, required this.title, required this.icon, this.trailing = const [], this.onBack});
+
+  /// Shown between the title and the buttons (the banner ad on Android).
+  final Widget? middle;
+  const PageTop({
+    super.key,
+    required this.title,
+    required this.icon,
+    this.trailing = const [],
+    this.onBack,
+    this.middle,
+  });
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -501,7 +511,17 @@ class PageTop extends StatelessWidget {
         IconTap('ic_arrow_left', size: 33, pad: 5, onTap: onBack ?? () => Navigator.maybePop(context)),
         Ic(icon, size: 30.sdp, pad: 5.sdp, color: C.title),
         SizedBox(width: 6.sdp),
-        Expanded(child: T(title, size: 11, lines: 1)),
+        if (middle == null)
+          Expanded(child: T(title, size: 11, lines: 1))
+        else ...[
+          Flexible(child: T(title, size: 11, lines: 1)),
+          Expanded(
+            flex: 3,
+            child: ClipRect(
+              child: OverflowBox(maxHeight: 60, child: Center(child: middle)),
+            ),
+          ),
+        ],
         if (trailing.isNotEmpty)
           SaveBox(
             child: Row(

@@ -65,6 +65,13 @@ class AppDetails {
       .map((m) => {'title': _s(m['title']), 'type': _s(m['redirect_type']), 'url': _s(m['page_data'])})
       .toList();
 
+  /// AdMob settings from the panel (ads_details), like LoadAbout on Android.
+  Map<String, dynamic> get ads {
+    final l = raw['ads_details'];
+    if (l is List && l.isNotEmpty && l.first is Map) return Map<String, dynamic>.from(l.first as Map);
+    return {};
+  }
+
   /// Popup ad shown once on the home screen.
   Map<String, String>? get popupAd {
     final l = raw['popup_ads'];
