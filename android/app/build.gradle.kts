@@ -29,10 +29,20 @@ android {
         versionName = flutter.versionName
     }
 
+    // Test builds use one fixed debug key, so a new APK from Codemagic installs
+    // over the old one (and keeps the login). This key is for testing only;
+    // the Play Store build must use a private upload key.
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("debug-test.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
         }
     }

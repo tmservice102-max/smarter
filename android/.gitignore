@@ -12,3 +12,5 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+# Shared test-only debug key (see app/build.gradle.kts).
+!app/debug-test.keystore
