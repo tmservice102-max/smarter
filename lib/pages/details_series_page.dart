@@ -2,6 +2,7 @@
 // info on top, seasons as chips, episodes as cards below.
 import 'package:material_ui/material_ui.dart';
 
+import '../downloads.dart';
 import '../models.dart';
 import '../session.dart';
 import '../store.dart';
@@ -107,7 +108,7 @@ class _DetailsSeriesPageState extends State<DetailsSeriesPage> {
                           child: SizedBox(height: 150.sdp, width: double.infinity, child: NetImg(cover)),
                         ),
                         SizedBox(height: 6.sdp),
-                        Stars(rating, tenScale: true),
+                        Stars(rating),
                       ],
                     ),
                   ),
@@ -162,18 +163,24 @@ class _DetailsSeriesPageState extends State<DetailsSeriesPage> {
                     children: [
                       for (final s in seasons)
                         Padding(
-                          padding: EdgeInsets.only(right: 6.sdp),
+                          padding: EdgeInsets.only(right: 3.sdp),
                           child: Tap(
                             onTap: () => setState(() => _season = s),
+                            // row_seasons_list: "Seasons N", bold, bg_edit_text pill.
                             builder: (f) => Container(
-                              padding: EdgeInsets.symmetric(horizontal: 14.sdp),
+                              padding: EdgeInsets.fromLTRB(10.sdp, 5.sdp, 10.sdp, 6.sdp),
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
                                 color: C.fill,
                                 borderRadius: BorderRadius.circular(f ? 2.sdp : 50.sdp),
                                 border: Border.all(color: f ? C.select : C.border, width: f ? 2.sdp : 1.sdp),
                               ),
-                              child: T('Season $s', size: 12, color: s == _season ? C.select : Colors.white),
+                              child: T(
+                                'Seasons $s',
+                                size: 12,
+                                weight: FontWeight.bold,
+                                color: s == _season ? C.select : Colors.white,
+                              ),
                             ),
                           ),
                         ),
@@ -211,7 +218,8 @@ class _DetailsSeriesPageState extends State<DetailsSeriesPage> {
   }
 }
 
-/// row_list_episodes
+/// row_list_episodes: inset rounded thumbnail with a play dot, title,
+/// small half-star rating, duration chip, and "DOWNLOAD" with a round button.
 class _EpisodeRow extends StatelessWidget {
   final Episode ep;
   final String fallback;
@@ -223,11 +231,20 @@ class _EpisodeRow extends StatelessWidget {
     final pos = Store.resumeAt(key);
     final secs = _secs(ep.duration);
     final canDownload = Session.app?.download ?? true;
+    final title = ep.title.isEmpty ? 'Episode ${ep.number}' : ep.title;
+    Widget round(String icon, VoidCallback onTap) => Tap(
+      onTap: onTap,
+      builder: (f) => Container(
+        margin: EdgeInsets.all(1.sdp),
+        decoration: BoxDecoration(shape: BoxShape.circle, color: f ? C.primary : const Color(0x2DFFFFFF)),
+        child: Ic(icon, size: 26.sdp, pad: 4.sdp),
+      ),
+    );
     return Tap(
       onTap: onTap,
       builder: (f) => Container(
         height: 85.sdp,
-        margin: EdgeInsets.only(bottom: 5.sdp),
+        margin: EdgeInsets.only(bottom: 2.sdp),
         decoration: BoxDecoration(
           color: const Color(0x45000000),
           borderRadius: BorderRadius.circular(4.sdp),
@@ -236,75 +253,96 @@ class _EpisodeRow extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SizedBox(
-              width: 130.sdp,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.horizontal(left: Radius.circular(4.sdp)),
-                    child: NetImg(ep.image.isNotEmpty ? ep.image : fallback, placeholder: 'placeholder_horizontal'),
-                  ),
-                  Center(
-                    child: Container(
-                      decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0x2DFFFFFF)),
-                      child: Ic('ic_play', size: 22.sdp, pad: 2.sdp),
-                    ),
-                  ),
-                  if (pos > 0 && secs > 0)
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      child: LinearProgressIndicator(
-                        value: (pos / secs).clamp(0, 1),
-                        minHeight: 2.sdp,
-                        color: C.select,
-                        backgroundColor: const Color(0x55FFFFFF),
+            Padding(
+              padding: EdgeInsets.all(6.sdp),
+              child: SizedBox(
+                width: 130.sdp,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(3.sdp),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      NetImg(ep.image.isNotEmpty ? ep.image : fallback, placeholder: 'placeholder_horizontal'),
+                      Center(
+                        child: Container(
+                          decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0x2DFFFFFF)),
+                          child: Ic('ic_play', size: 22.sdp, pad: 2.sdp),
+                        ),
                       ),
-                    ),
-                ],
+                      if (pos > 0 && secs > 0)
+                        Positioned(
+                          left: 5.sdp,
+                          right: 5.sdp,
+                          bottom: 5.sdp,
+                          child: LinearProgressIndicator(
+                            value: (pos / secs).clamp(0, 1),
+                            minHeight: 2.sdp,
+                            color: C.primary,
+                            backgroundColor: const Color(0x55FFFFFF),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
               ),
             ),
             Expanded(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(8.sdp, 5.sdp, 5.sdp, 3.sdp),
+                padding: EdgeInsets.only(top: 5.sdp, bottom: 5.sdp, right: 10.sdp),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    T(ep.title.isEmpty ? 'Episode ${ep.number}' : ep.title, size: 10, lines: 2),
+                    T(title, size: 10, lines: 1),
                     SizedBox(height: 2.sdp),
-                    if (ep.rating.isNotEmpty && ep.rating != '0') Stars(ep.rating, size: 11, tenScale: true),
+                    HalfStars(ep.rating),
                     SizedBox(height: 2.sdp),
-                    if (ep.duration.isNotEmpty)
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 4.sdp, vertical: 1.sdp),
-                        decoration: BoxDecoration(
-                          color: const Color(0x40838383),
-                          borderRadius: BorderRadius.circular(2.sdp),
-                        ),
-                        child: T(durationText(ep.duration), size: 8),
+                    Container(
+                      padding: EdgeInsets.only(left: 4.sdp, right: 4.sdp, bottom: 1.sdp),
+                      decoration: BoxDecoration(
+                        color: const Color(0x40838383),
+                        borderRadius: BorderRadius.circular(2.sdp),
                       ),
+                      child: T(ep.duration.isEmpty ? '0' : episodeDuration(ep.duration), size: 8),
+                    ),
                     const Spacer(),
                     if (canDownload)
-                      Row(
-                        children: [
-                          Expanded(child: DownloadLine(key)),
-                          IconTap(
-                            'iv_downloading',
-                            size: 26,
-                            pad: 4,
-                            onTap: () {
-                              startDownload(
-                                context,
-                                id: key,
-                                title: ep.title.isEmpty ? 'Episode ${ep.number}' : ep.title,
-                                icon: ep.image.isNotEmpty ? ep.image : fallback,
-                                url: Session.src.episodeUrl(ep),
-                              );
-                            },
-                          ),
-                        ],
+                      ListenableBuilder(
+                        listenable: Downloads.instance,
+                        builder: (context, _) {
+                          final d = Downloads.instance.find(key);
+                          final running = d != null && (d.status == DlStatus.running || d.status == DlStatus.queued);
+                          final done = d != null && d.status == DlStatus.done;
+                          final status = done
+                              ? S.downloaded
+                              : running
+                              ? '${S.downloading} ${(d.progress * 100).toStringAsFixed(0)}%'
+                              : S.download;
+                          return Row(
+                            children: [
+                              Expanded(child: T(status, size: 8, weight: FontWeight.bold, lines: 1)),
+                              SizedBox(width: 5.sdp),
+                              if (running)
+                                round('ic_close', () {
+                                  Downloads.instance.remove(d);
+                                  toast(context, S.download_cancelled);
+                                })
+                              else
+                                round('iv_downloading', () {
+                                  if (done) {
+                                    toast(context, S.already_download);
+                                    return;
+                                  }
+                                  startDownload(
+                                    context,
+                                    id: key,
+                                    title: title,
+                                    icon: ep.image.isNotEmpty ? ep.image : fallback,
+                                    url: Session.src.episodeUrl(ep),
+                                  );
+                                }),
+                            ],
+                          );
+                        },
                       ),
                   ],
                 ),

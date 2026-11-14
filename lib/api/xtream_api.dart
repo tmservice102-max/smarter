@@ -141,6 +141,7 @@ class XtreamSource implements ContentSource {
       cover: _s(i['movie_image'] ?? i['cover']).isNotEmpty ? _s(i['movie_image'] ?? i['cover']) : fallbackCover,
       backdrop: backdrop,
       trailer: _s(i['youtube_trailer']),
+      tmdbId: _s(i['tmdb_id']),
     );
   }
 

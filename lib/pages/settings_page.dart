@@ -573,12 +573,14 @@ class _UiPage extends StatefulWidget {
 
 class _UiPageState extends State<_UiPage> {
   bool _title = Store.showCardTitle;
+  bool _cast = Store.showCast;
   bool _download = Store.showDownload;
   @override
   Widget build(BuildContext context) => _SettingFrame(
     title: S.ui_setting,
     onSave: () {
       Store.showCardTitle = _title;
+      Store.showCast = _cast;
       Store.showDownload = _download;
     },
     child: SingleChildScrollView(
@@ -586,7 +588,8 @@ class _UiPageState extends State<_UiPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _Check('Show movie / series name', _title, (v) => setState(() => _title = v)),
+          _Check(S.show_movie_series_name, _title, (v) => setState(() => _title = v)),
+          _Check(S.show_movie_cast_details, _cast, (v) => setState(() => _cast = v)),
           _Check(S.show_download_button, _download, (v) => setState(() => _download = v)),
         ],
       ),

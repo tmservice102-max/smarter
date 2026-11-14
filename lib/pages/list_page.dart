@@ -184,7 +184,8 @@ class _ListPageState extends State<ListPage> {
               flex: 3,
               child: PageTop(
                 title: typeTitle(t),
-                icon: typeIcon(t),
+                // activity_list keeps the same list icon for all three.
+                icon: 'list_channels',
                 trailing: [
                   if (!widget.playlist)
                     TopBtn(
@@ -230,8 +231,14 @@ class _ListPageState extends State<ListPage> {
                               isDense: true,
                               border: InputBorder.none,
                               hintText: S.search_categories,
-                              hintStyle: TextStyle(color: Colors.white54, fontSize: 11.ssp),
+                              hintStyle: TextStyle(color: C.titleSub, fontSize: 11.ssp),
                               contentPadding: EdgeInsets.fromLTRB(5.sdp, 5.sdp, 3.sdp, 5.sdp),
+                              // drawableEnd="@drawable/ic_search"
+                              suffixIcon: Padding(
+                                padding: EdgeInsets.only(left: 3.sdp, right: 3.sdp),
+                                child: Ic('ic_search', size: 16.sdp),
+                              ),
+                              suffixIconConstraints: BoxConstraints(minWidth: 22.sdp, minHeight: 16.sdp),
                             ),
                           ),
                         ),
@@ -331,7 +338,10 @@ class _Grid extends StatelessWidget {
     final live = type == ContentType.live;
     return GridView.builder(
       padding: EdgeInsets.only(left: 3.sdp, bottom: 10.sdp),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 5, childAspectRatio: live ? 1 : 1 / 1.15),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 5,
+        mainAxisExtent: posterHeight(context, live),
+      ),
       itemCount: items.length,
       itemBuilder: (context, i) => PosterCard(
         item: items[i],
@@ -340,6 +350,14 @@ class _Grid extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Card height in the 5-column lists: AdapterChannel / AdapterMovie make
+/// each card a seventh of the screen width high (x1.15 for posters), plus
+/// the 2sdp margins.
+double posterHeight(BuildContext context, bool live) {
+  final w = MediaQuery.sizeOf(context).width / 7;
+  return (live ? w : w * 1.15) + 4.sdp;
 }
 
 /// row_list_live / row_list_movie: image, title strip at the bottom, rating.
@@ -387,7 +405,13 @@ class PosterCard extends StatelessWidget {
                       color: const Color(0x99000000),
                       borderRadius: BorderRadius.circular(2.sdp),
                     ),
-                    child: T(item.name, size: 8, lines: 1, align: TextAlign.center),
+                    child: Text(
+                      item.name,
+                      maxLines: live ? 2 : 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white, fontSize: 8.ssp, height: live ? 1.08 : 1.2),
+                    ),
                   ),
                 ),
               if (showRating)

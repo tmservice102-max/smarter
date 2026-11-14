@@ -1,10 +1,14 @@
 // Shared parts of the movie and series detail pages.
+import 'dart:convert';
 import 'dart:ui';
 
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:http/http.dart' as http;
 import 'package:material_ui/material_ui.dart';
 
 import '../api/panel_api.dart';
 import '../downloads.dart';
+import '../session.dart';
 import '../store.dart';
 import '../ui/dialogs.dart';
 import '../ui/kit.dart';
@@ -51,16 +55,50 @@ class BlurBg extends StatelessWidget {
 class Stars extends StatelessWidget {
   final String rating;
   final double size;
-  final bool tenScale;
-  const Stars(this.rating, {super.key, this.size = 18, this.tenScale = false});
+  const Stars(this.rating, {super.key, this.size = 18});
   @override
   Widget build(BuildContext context) {
-    var r = double.tryParse(rating) ?? 0;
-    if (tenScale) r = r / 2;
-    final n = r.floor().clamp(0, 5);
+    // ApplicationUtil.setRating: whole stars = floor(rating), at most 5;
+    // ic_star is amber (#FFC107), ic_star_border light grey.
+    final n = (double.tryParse(rating) ?? 0).floor().clamp(0, 5);
     return Row(
       mainAxisSize: MainAxisSize.min,
-      children: [for (var i = 0; i < 5; i++) Ic(i < n ? 'ic_star' : 'ic_star_border', size: size.sdp, color: null)],
+      children: [
+        for (var i = 0; i < 5; i++)
+          i < n
+              ? Ic('ic_star', size: size.sdp, color: const Color(0xFFFFC107))
+              : Ic('ic_star_border', size: size.sdp, color: const Color(0xCCFFFFFF)),
+      ],
+    );
+  }
+}
+
+/// RatingBar_white (small RatingBar in the episode rows): the 10-point
+/// rating mapped to 5 stars with halves, orange on faint white.
+class HalfStars extends StatelessWidget {
+  final String rating;
+  final double size;
+  const HalfStars(this.rating, {super.key, this.size = 12});
+  @override
+  Widget build(BuildContext context) {
+    final r = double.tryParse(rating) ?? 0;
+    final v = r <= 0 ? 0.0 : ((r - 1) * 4 / 9 + 1).clamp(0.0, 5.0);
+    // RatingBar.Small steps by half a star.
+    final halves = (v * 2).round();
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var i = 0; i < 5; i++)
+          Icon(
+            halves >= (i + 1) * 2
+                ? Icons.star
+                : halves == i * 2 + 1
+                ? Icons.star_half
+                : Icons.star,
+            size: size.sdp,
+            color: halves > i * 2 ? C.select : const Color(0x40FFFFFF),
+          ),
+      ],
     );
   }
 }
@@ -76,16 +114,16 @@ class InfoTable extends StatelessWidget {
       columnWidths: const {0: FlexColumnWidth(0.9), 1: FlexColumnWidth(2)},
       defaultVerticalAlignment: TableCellVerticalAlignment.top,
       children: [
-        for (final (k, v) in rows)
+        for (var i = 0; i < rows.length; i++)
           TableRow(
             children: [
               Padding(
-                padding: EdgeInsets.only(bottom: 4.sdp),
-                child: T(k, size: 10, weight: FontWeight.bold),
+                padding: EdgeInsets.only(bottom: i == rows.length - 1 ? 0 : 10.sdp),
+                child: T(rows[i].$1, size: 10, weight: FontWeight.bold),
               ),
               Padding(
-                padding: EdgeInsets.only(bottom: 4.sdp),
-                child: v,
+                padding: EdgeInsets.only(bottom: i == rows.length - 1 ? 0 : 10.sdp),
+                child: rows[i].$2,
               ),
             ],
           ),
@@ -97,6 +135,104 @@ class InfoTable extends StatelessWidget {
 String na(String v) => v.isEmpty || v == 'null' ? S.n_a : v;
 
 /// "0h 0m" from Xtream's "01:45:00" or minutes.
+/// "Top Billed Cast": TMDB credits for a movie (getMovieCredits), using the
+/// panel's tmdb_key as the read token. Returns (name, photo url) pairs.
+Future<List<(String, String)>> tmdbCast(String tmdbId) async {
+  final key = Session.app?.tmdbKey ?? '';
+  if (key.isEmpty || tmdbId.isEmpty) return [];
+  final r = await http
+      .get(
+        Uri.parse('https://api.themoviedb.org/3/movie/$tmdbId/credits'),
+        headers: {'accept': 'application/json', 'Authorization': 'Bearer $key'},
+      )
+      .timeout(const Duration(seconds: 15));
+  if (r.statusCode != 200) return [];
+  final j = jsonDecode(r.body);
+  final cast = j is Map ? j['cast'] : null;
+  if (cast is! List) return [];
+  return [
+    for (final c in cast)
+      if (c is Map)
+        (
+          '${c['name'] ?? ''}',
+          (c['profile_path'] ?? '').toString().isEmpty ? '' : 'https://image.tmdb.org/t/p/w300${c['profile_path']}',
+        ),
+  ];
+}
+
+/// row_list_cast: 90sdp card, photo on top, name below.
+class CastRow extends StatelessWidget {
+  final List<(String, String)> cast;
+  const CastRow(this.cast, {super.key});
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    height: 118.sdp,
+    child: ListView.builder(
+      scrollDirection: Axis.horizontal,
+      padding: EdgeInsets.only(left: 1.sdp, right: 25.sdp),
+      itemCount: cast.length,
+      itemBuilder: (_, i) {
+        final (name, photo) = cast[i];
+        return Padding(
+          padding: EdgeInsets.only(left: i == 0 ? 0 : 5.sdp),
+          child: Tap(
+            onTap: () => toast(context, name),
+            builder: (f) => SizedBox(
+              width: 90.sdp,
+              child: SaveBox(
+                focused: f,
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.all(1.sdp),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(2.sdp)),
+                        child: SizedBox(
+                          height: 88.sdp,
+                          width: double.infinity,
+                          child: photo.isEmpty
+                              ? Ic('ic_credits', size: 88.sdp, pad: 20.sdp, color: C.titleSub)
+                              : CachedNetworkImage(
+                                  imageUrl: photo,
+                                  fit: BoxFit.cover,
+                                  placeholder: (_, _) => Ic('ic_credits', size: 88.sdp, pad: 20.sdp, color: C.titleSub),
+                                  errorWidget: (_, _, _) =>
+                                      Ic('ic_credits', size: 88.sdp, pad: 20.sdp, color: C.titleSub),
+                                ),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 9.sdp, vertical: 4.sdp),
+                      child: T(name, size: 10, lines: 1, align: TextAlign.center),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    ),
+  );
+}
+
+/// FormatUtils.formatTimeDuration for episodes: "41m 18s", "1h 3m".
+String episodeDuration(String v) {
+  final p = v.split(':').map((e) => int.tryParse(e) ?? 0).toList();
+  var secs = 0;
+  if (p.length == 3) {
+    secs = p[0] * 3600 + p[1] * 60 + p[2];
+  } else if (p.length == 2) {
+    secs = p[0] * 60 + p[1];
+  } else {
+    secs = (int.tryParse(v) ?? 0) * 60;
+  }
+  final h = secs ~/ 3600, m = secs % 3600 ~/ 60, s = secs % 60;
+  if (h > 0) return '${h}h ${m}m';
+  return '${m}m ${s}s';
+}
+
 String durationText(String v) {
   if (v.isEmpty) return '0h 0m';
   final p = v.split(':');

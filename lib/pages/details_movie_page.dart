@@ -20,6 +20,7 @@ class DetailsMoviePage extends StatefulWidget {
 class _DetailsMoviePageState extends State<DetailsMoviePage> {
   MovieInfo? _info;
   bool _loading = true;
+  List<(String, String)>? _cast; // null while loading
 
   StreamItem get item => widget.item;
 
@@ -33,9 +34,22 @@ class _DetailsMoviePageState extends State<DetailsMoviePage> {
     try {
       final i = await Session.src.movieInfo(item);
       if (mounted) setState(() => _info = i);
+      if (Store.showCast && i.tmdbId.isNotEmpty && (Session.app?.tmdbKey ?? '').isNotEmpty) _loadCast(i.tmdbId);
     } catch (_) {}
     if (mounted) setState(() => _loading = false);
   }
+
+  Future<void> _loadCast(String id) async {
+    setState(() => _cast = null);
+    var list = <(String, String)>[];
+    try {
+      list = await tmdbCast(id);
+    } catch (_) {}
+    if (mounted) setState(() => _cast = list);
+  }
+
+  bool get _castShown =>
+      Store.showCast && (_info?.tmdbId.isNotEmpty ?? false) && (Session.app?.tmdbKey ?? '').isNotEmpty;
 
   void _play() {
     Store.addRecent(item);
@@ -92,7 +106,7 @@ class _DetailsMoviePageState extends State<DetailsMoviePage> {
                             child: SizedBox.expand(child: NetImg(cover)),
                           ),
                         ),
-                        Expanded(flex: 1, child: Center(child: Stars(rating, tenScale: true))),
+                        Expanded(flex: 1, child: Center(child: Stars(rating))),
                       ],
                     ),
                   ),
@@ -170,6 +184,15 @@ class _DetailsMoviePageState extends State<DetailsMoviePage> {
                                     ],
                                   ],
                                 ),
+                                if (_castShown && (_cast == null || _cast!.isNotEmpty)) ...[
+                                  Padding(
+                                    padding: EdgeInsets.only(top: 10.sdp, bottom: 3.sdp),
+                                    child: T(S.top_billed_cast, size: 10, weight: FontWeight.bold),
+                                  ),
+                                  _cast == null
+                                      ? SizedBox(height: 35.sdp, child: const Loader(size: 30))
+                                      : CastRow(_cast!),
+                                ],
                                 Padding(padding: EdgeInsets.all(10.sdp), child: T(na(i?.plot ?? ''), size: 10)),
                               ],
                             ),

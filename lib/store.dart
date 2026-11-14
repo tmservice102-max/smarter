@@ -149,6 +149,10 @@ class Store {
   static bool get showDownload => _p.getBool('ui_download') ?? true;
   static set showDownload(bool v) => _p.setBool('ui_download', v);
 
+  /// UI settings "Show Movie Cast Details" (Top Billed Cast from TMDB).
+  static bool get showCast => _p.getBool('ui_cast') ?? true;
+  static set showCast(bool v) => _p.setBool('ui_cast', v);
+
   static bool get showCardTitle => _p.getBool('ui_card_title') ?? true;
   static set showCardTitle(bool v) => _p.setBool('ui_card_title', v);
 

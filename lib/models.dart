@@ -249,6 +249,7 @@ class MovieInfo {
   final String cover;
   final String backdrop;
   final String trailer;
+  final String tmdbId;
   MovieInfo({
     this.plot = '',
     this.cast = '',
@@ -260,6 +261,7 @@ class MovieInfo {
     this.cover = '',
     this.backdrop = '',
     this.trailer = '',
+    this.tmdbId = '',
   });
 }
 

@@ -81,8 +81,6 @@ class _SearchPageState extends State<SearchPage> {
                     ],
                   ),
                 ),
-                SizedBox(width: 10.sdp),
-                Expanded(child: T(typeTitle(widget.type), size: 11, color: C.titleSub, lines: 1)),
               ],
             ),
             SizedBox(height: 10.sdp),
@@ -94,7 +92,7 @@ class _SearchPageState extends State<SearchPage> {
                   : GridView.builder(
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 5,
-                        childAspectRatio: live ? 1 : 1 / 1.15,
+                        mainAxisExtent: posterHeight(context, live),
                       ),
                       itemCount: _res!.length,
                       itemBuilder: (context, i) => PosterCard(
