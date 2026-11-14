@@ -66,7 +66,7 @@ class _DetailsMoviePageState extends State<DetailsMoviePage> {
     final fav = Store.isFavorite(item);
     final resume = Store.resumeAt(item.key) > 30;
     final rating = (i?.rating.isNotEmpty ?? false) ? i!.rating : item.rating;
-    final canDownload = Session.app?.download ?? true;
+    final canDownload = (Session.app?.download ?? true) && Store.showDownload;
     return BlurBg(
       image: (i?.backdrop.isNotEmpty ?? false) ? i!.backdrop : cover,
       child: Padding(

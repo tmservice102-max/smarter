@@ -67,6 +67,7 @@ Future<void> refreshAccountInfo() async {
     if (info != null) {
       await Store.prefs.setInt('exp|${a.id}', info.expires?.millisecondsSinceEpoch ?? 0);
       await Store.prefs.setString('info|${a.id}', '${info.status}|${info.maxConnections}|${info.activeConnections}');
+      await Store.prefs.setString('msg|${a.id}', info.message);
     }
   } catch (_) {}
 }

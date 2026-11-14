@@ -230,7 +230,7 @@ class _EpisodeRow extends StatelessWidget {
     final key = 'episode:${ep.id}';
     final pos = Store.resumeAt(key);
     final secs = _secs(ep.duration);
-    final canDownload = Session.app?.download ?? true;
+    final canDownload = (Session.app?.download ?? true) && Store.showDownload;
     final title = ep.title.isEmpty ? 'Episode ${ep.number}' : ep.title;
     Widget round(String icon, VoidCallback onTap) => Tap(
       onTap: onTap,

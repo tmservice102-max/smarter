@@ -394,7 +394,8 @@ class PosterCard extends StatelessWidget {
             fit: StackFit.expand,
             children: [
               NetImg(item.icon, placeholder: live ? 'placeholder_live' : 'placeholder_vertical'),
-              if (item.name.isNotEmpty)
+              // UI settings "Show Movie/ Series Name" (channels always show it).
+              if (item.name.isNotEmpty && (live || Store.showCardTitle))
                 Positioned(
                   left: 5.sdp,
                   right: 5.sdp,

@@ -16,33 +16,87 @@ import 'catch_up_page.dart';
 import 'player_kit.dart';
 import 'player_live_page.dart';
 
-/// row_cat_catch_up: tv icon, name, count and arrow.
+/// row_cat_catch_up: icon (or channel logo), name and arrow on a
+/// near-black card (Classic theme bg_sub #121212, border #CC0E0E0E).
 class CatTile extends StatelessWidget {
   final String name;
-  final String count;
+  final String icon;
+  final String? logo;
   final VoidCallback onTap;
-  const CatTile({super.key, required this.name, this.count = '', required this.onTap});
+  const CatTile({super.key, required this.name, this.icon = 'ic_tv', this.logo, required this.onTap});
   @override
   Widget build(BuildContext context) => Tap(
     onTap: onTap,
     builder: (f) => Container(
       height: 40.sdp,
-      margin: EdgeInsets.all(2.sdp),
+      margin: EdgeInsets.all(3.sdp),
       decoration: BoxDecoration(
-        color: const Color(0x12FFFFFF),
+        color: const Color(0xFF121212),
         borderRadius: BorderRadius.circular(1.sdp),
-        border: Border.all(color: f ? const Color(0xFFFFAB00) : C.border, width: 1.sdp),
+        border: Border.all(color: f ? const Color(0xFFFFAB00) : const Color(0xCC0E0E0E), width: 1.sdp),
       ),
       child: Row(
         children: [
           SizedBox(width: 5.sdp),
-          Ic('ic_tv', size: 40.sdp, pad: 9.sdp, color: C.title),
-          Expanded(child: T(name, size: 13, color: C.title, lines: 1)),
-          if (count.isNotEmpty) T(count, size: 11, color: C.titleSub),
-          Ic('ic_arrow_right', size: 40.sdp, pad: 11.sdp),
+          logo == null
+              ? Ic(icon, size: 40.sdp, pad: 7.sdp)
+              : Padding(
+                  padding: EdgeInsets.all(7.sdp),
+                  child: NetImg(
+                    logo!,
+                    placeholder: 'placeholder_live',
+                    width: 26.sdp,
+                    height: 26.sdp,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+          SizedBox(width: 5.sdp),
+          Expanded(child: T(name, size: 15, color: C.title, lines: 1)),
+          Ic('ic_arrow_right', size: 40.sdp, pad: 10.sdp),
+          SizedBox(width: 5.sdp),
         ],
       ),
     ),
+  );
+}
+
+/// Title row with the "Filter" box on the right (activity_categories /
+/// activity_catch_up).
+class _FilterTop extends StatelessWidget {
+  final String title;
+  final TextEditingController controller;
+  final VoidCallback onChanged;
+  const _FilterTop({required this.title, required this.controller, required this.onChanged});
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Expanded(
+        child: PageTop(title: title, icon: 'list_channels'),
+      ),
+      Container(
+        width: 200.sdp,
+        margin: EdgeInsets.only(right: 2.sdp),
+        decoration: BoxDecoration(color: const Color(0x2DFFFFFF), borderRadius: BorderRadius.circular(2.sdp)),
+        child: TextField(
+          controller: controller,
+          onChanged: (_) => onChanged(),
+          style: TextStyle(color: C.title, fontSize: 11.ssp),
+          cursorColor: Colors.white,
+          decoration: InputDecoration(
+            isDense: true,
+            border: InputBorder.none,
+            hintText: S.filter,
+            hintStyle: TextStyle(color: C.titleSub, fontSize: 11.ssp),
+            contentPadding: EdgeInsets.all(5.sdp),
+            suffixIcon: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 3.sdp),
+              child: Ic('ic_search', size: 16.sdp),
+            ),
+            suffixIconConstraints: BoxConstraints(minWidth: 22.sdp, minHeight: 16.sdp),
+          ),
+        ),
+      ),
+    ],
   );
 }
 
@@ -88,29 +142,10 @@ class _EpgCategoriesPageState extends State<EpgCategoriesPage> {
         padding: EdgeInsets.all(5.sdp),
         child: Column(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: PageTop(title: widget.catchUp ? S.catch_up_home : S.categories, icon: 'list_channels'),
-                ),
-                Container(
-                  width: 200.sdp,
-                  decoration: BoxDecoration(color: const Color(0x2DFFFFFF), borderRadius: BorderRadius.circular(2.sdp)),
-                  child: TextField(
-                    controller: _q,
-                    onChanged: (_) => setState(() {}),
-                    style: TextStyle(color: C.title, fontSize: 11.ssp),
-                    cursorColor: Colors.white,
-                    decoration: InputDecoration(
-                      isDense: true,
-                      border: InputBorder.none,
-                      hintText: S.filter,
-                      hintStyle: TextStyle(color: Colors.white54, fontSize: 11.ssp),
-                      contentPadding: EdgeInsets.all(7.sdp),
-                    ),
-                  ),
-                ),
-              ],
+            _FilterTop(
+              title: widget.catchUp ? S.catch_up_home : S.categories,
+              controller: _q,
+              onChanged: () => setState(() {}),
             ),
             SizedBox(height: 5.sdp),
             Expanded(
@@ -121,14 +156,15 @@ class _EpgCategoriesPageState extends State<EpgCategoriesPage> {
                   : GridView.builder(
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
-                        mainAxisExtent: 44.sdp,
+                        mainAxisExtent: 46.sdp,
                       ),
                       itemCount: cats.length,
                       itemBuilder: (_, i) {
-                        final (c, n) = cats[i];
+                        final (c, _) = cats[i];
                         return CatTile(
                           name: c.name,
-                          count: '$n',
+                          // CategoriesActivity shows folders, CatchUpActivity a TV.
+                          icon: widget.catchUp ? 'ic_tv' : 'ic_folders',
                           onTap: () async {
                             if (!await Parental.check(context, c.name) || !context.mounted) return;
                             final list = _channels(c.id);
@@ -225,7 +261,7 @@ class _EpgPageState extends State<EpgPage> {
                 IconTap('ic_player_back', size: 33, pad: 5, onTap: () => Navigator.maybePop(context)),
                 Ic('list_channels', size: 30.sdp, pad: 5.sdp, color: C.title),
                 SizedBox(width: 6.sdp),
-                Expanded(child: T('${S.live_with_epg_home}  •  ${widget.title}', size: 11, lines: 1)),
+                Expanded(child: T(S.live_with_epg_home, size: 11, lines: 1)),
               ],
             ),
             SizedBox(height: 4.sdp),
@@ -295,6 +331,7 @@ class _EpgPageState extends State<EpgPage> {
                                                   size: 11,
                                                   lines: 2,
                                                   align: TextAlign.center,
+                                                  weight: FontWeight.bold,
                                                 ),
                                                 SizedBox(height: 4.sdp),
                                                 T(
@@ -317,7 +354,8 @@ class _EpgPageState extends State<EpgPage> {
                                   child: _epg == null
                                       ? const Loader(size: 30)
                                       : _epg!.isEmpty
-                                      ? Empty(S.err_no_data_found)
+                                      // setEpg(null): one "No Data Found" listing.
+                                      ? ListView(padding: EdgeInsets.all(5.sdp), children: [const _NoEpgRow()])
                                       : ListView.builder(
                                           padding: EdgeInsets.all(5.sdp),
                                           itemCount: _epg!.length,
@@ -356,19 +394,30 @@ class _EpgChannelRow extends StatelessWidget {
         children: [
           Container(width: 2.sdp, height: 30.sdp, color: selected ? C.select : Colors.transparent),
           SizedBox(width: 5.sdp),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(3.sdp),
-            child: Container(
-              width: 50.sdp,
-              height: 30.sdp,
-              color: C.load,
-              child: NetImg(item.icon, placeholder: 'placeholder_live', fit: BoxFit.contain),
-            ),
-          ),
+          NetImg(item.icon, placeholder: 'placeholder_live', width: 50.sdp, height: 30.sdp, fit: BoxFit.contain),
           SizedBox(width: 6.sdp),
           Expanded(child: T(item.name, size: 12, color: selected ? C.select : Colors.white, lines: 1)),
         ],
       ),
+    ),
+  );
+}
+
+/// The single listing shown when a channel has no guide.
+class _NoEpgRow extends StatelessWidget {
+  const _NoEpgRow();
+  @override
+  Widget build(BuildContext context) => Container(
+    margin: EdgeInsets.only(bottom: 4.sdp),
+    padding: EdgeInsets.fromLTRB(15.sdp, 5.sdp, 8.sdp, 5.sdp),
+    color: const Color(0x27FFFFFF),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        T(S.err_no_data_found, size: 11, lines: 1, weight: FontWeight.bold),
+        SizedBox(height: 2.sdp),
+        T('-', size: 9, color: C.titleSub),
+      ],
     ),
   );
 }
@@ -428,33 +477,55 @@ class EpgRow extends StatelessWidget {
   }
 }
 
-/// Channels of a category that keep recordings (CatchUpLiveActivity).
-class CatchUpChannelsPage extends StatelessWidget {
+/// Channels of a category that keep recordings (CatchUpLiveActivity):
+/// "Catch Up | name", the Filter box, and each channel's logo.
+class CatchUpChannelsPage extends StatefulWidget {
   final String title;
   final List<StreamItem> channels;
   const CatchUpChannelsPage({super.key, required this.title, required this.channels});
   @override
-  Widget build(BuildContext context) => PageBg(
-    child: Padding(
-      padding: EdgeInsets.all(5.sdp),
-      child: Column(
-        children: [
-          PageTop(title: '${S.catch_up_home}  •  $title', icon: 'list_channels'),
-          SizedBox(height: 5.sdp),
-          Expanded(
-            child: channels.isEmpty
-                ? Empty(S.err_no_data_found)
-                : GridView.builder(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, mainAxisExtent: 44.sdp),
-                    itemCount: channels.length,
-                    itemBuilder: (_, i) => CatTile(
-                      name: channels[i].name,
-                      onTap: () => go(context, CatchUpEpgPage(channel: channels[i])),
+  State<CatchUpChannelsPage> createState() => _CatchUpChannelsPageState();
+}
+
+class _CatchUpChannelsPageState extends State<CatchUpChannelsPage> {
+  final _q = TextEditingController();
+
+  @override
+  void dispose() {
+    _q.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final q = _q.text.trim().toLowerCase();
+    final list = q.isEmpty ? widget.channels : widget.channels.where((c) => c.name.toLowerCase().contains(q)).toList();
+    return PageBg(
+      child: Padding(
+        padding: EdgeInsets.all(5.sdp),
+        child: Column(
+          children: [
+            _FilterTop(title: '${S.catch_up_home} | ${widget.title}', controller: _q, onChanged: () => setState(() {})),
+            SizedBox(height: 5.sdp),
+            Expanded(
+              child: list.isEmpty
+                  ? Empty(S.err_no_data_found)
+                  : GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        mainAxisExtent: 46.sdp,
+                      ),
+                      itemCount: list.length,
+                      itemBuilder: (_, i) => CatTile(
+                        name: list[i].name,
+                        logo: list[i].icon,
+                        onTap: () => go(context, CatchUpEpgPage(channel: list[i])),
+                      ),
                     ),
-                  ),
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }

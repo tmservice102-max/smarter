@@ -30,6 +30,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final active = info.length > 2 ? info[2] : '0';
     final exp = savedExpiry();
     final isActive = status.toLowerCase() == 'active';
+    final note = Store.prefs.getString('msg|${a?.id}') ?? '';
     return PageBg(
       child: Padding(
         padding: EdgeInsets.all(5.sdp),
@@ -78,10 +79,21 @@ class _ProfilePageState extends State<ProfilePage> {
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
+                                          // Title on the left, status badge in the top-right corner.
                                           Row(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
+                                              Expanded(
+                                                child: T(
+                                                  AppConfig.appName,
+                                                  size: 18,
+                                                  lines: 1,
+                                                  weight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              SizedBox(width: 10.sdp),
                                               Container(
-                                                padding: EdgeInsets.symmetric(horizontal: 4.sdp, vertical: 1.sdp),
+                                                padding: EdgeInsets.fromLTRB(4.sdp, 2.sdp, 4.sdp, 3.sdp),
                                                 decoration: BoxDecoration(
                                                   color: Colors.white,
                                                   borderRadius: BorderRadius.circular(2.sdp),
@@ -97,28 +109,29 @@ class _ProfilePageState extends State<ProfilePage> {
                                                   color: isActive ? const Color(0xFF05B60D) : const Color(0xFFFF9800),
                                                 ),
                                               ),
-                                              SizedBox(width: 8.sdp),
-                                              Expanded(
-                                                child: T(
-                                                  AppConfig.appName,
-                                                  size: 18,
-                                                  lines: 1,
-                                                  weight: FontWeight.bold,
+                                            ],
+                                          ),
+                                          // Server note (3 lines) and the white SIM chip.
+                                          Expanded(
+                                            child: Row(
+                                              children: [
+                                                Expanded(
+                                                  child: Opacity(opacity: 0.8, child: T(note, size: 11, lines: 3)),
                                                 ),
-                                              ),
-                                            ],
+                                                SizedBox(width: 20.sdp),
+                                                Padding(
+                                                  padding: EdgeInsets.only(right: 20.sdp),
+                                                  child: Image.asset(
+                                                    'assets/img/sim_card.webp',
+                                                    width: 45.sdp,
+                                                    height: 45.sdp,
+                                                    color: Colors.white,
+                                                    colorBlendMode: BlendMode.srcIn,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
                                           ),
-                                          const Spacer(),
-                                          Row(
-                                            crossAxisAlignment: CrossAxisAlignment.end,
-                                            children: [
-                                              Expanded(
-                                                child: T(Uri.tryParse(a?.server ?? '')?.host ?? '', size: 11, lines: 1),
-                                              ),
-                                              Image.asset('assets/img/sim_card.webp', width: 45.sdp, height: 45.sdp),
-                                            ],
-                                          ),
-                                          const Spacer(),
                                           Row(
                                             crossAxisAlignment: CrossAxisAlignment.end,
                                             children: [

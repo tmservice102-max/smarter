@@ -74,6 +74,7 @@ class XtreamSource implements ContentSource {
       _s(u['max_connections']),
       _s(u['active_cons']),
       formats: f is List ? [for (final x in f) _s(x)] : const [],
+      message: _s(u['message']),
     );
   }
 

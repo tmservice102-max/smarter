@@ -324,5 +324,15 @@ class AccountInfo {
 
   /// user_info.allowed_output_formats, e.g. ["m3u8", "ts"].
   final List<String> formats;
-  AccountInfo(this.status, this.expires, this.maxConnections, this.activeConnections, {this.formats = const []});
+
+  /// user_info.message: the note shown on the subscription card.
+  final String message;
+  AccountInfo(
+    this.status,
+    this.expires,
+    this.maxConnections,
+    this.activeConnections, {
+    this.formats = const [],
+    this.message = '',
+  });
 }

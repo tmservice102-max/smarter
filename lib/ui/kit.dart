@@ -473,7 +473,7 @@ class Empty extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Ic('ic_search_off', size: 50.sdp, color: C.title),
-          T(title, size: 10, color: C.title, align: TextAlign.center),
+          T(title, size: 10, color: C.title, align: TextAlign.center, weight: FontWeight.bold),
           if (sub.isNotEmpty) ...[
             SizedBox(height: 3.sdp),
             SizedBox(
