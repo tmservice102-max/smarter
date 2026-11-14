@@ -13,10 +13,9 @@ class AppConfig {
   /// Key in the panel's JSON replies (API_HEADER_APP in the panel's .env).
   static const apiHeader = 'NEMOSOFTS_APP';
 
-  /// AdMob on iPhone. The panel's ad IDs are for the Android app, and Google
-  /// needs separate IDs for an iOS app. These are Google's sample test IDs
-  /// (they show "Test Ad"). Before the App Store release, create an iOS app
-  /// in AdMob, put its ad unit IDs here and its app ID in
+  /// AdMob on iPhone when the panel has no iOS ad unit IDs (ios_banner_ad_id,
+  /// ios_interstital_ad_id, ios_reward_ad_id): Google's sample test IDs,
+  /// which show "Test Ad". The iOS AdMob app ID itself must be in
   /// ios/Runner/Info.plist (GADApplicationIdentifier).
   static const iosBannerAdId = 'ca-app-pub-3940256099942544/2934735716';
   static const iosInterstitialAdId = 'ca-app-pub-3940256099942544/4411468910';

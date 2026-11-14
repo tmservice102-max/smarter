@@ -31,7 +31,16 @@ class Ads {
       _f('ad_status') &&
       '${_cfg['ad_network'] ?? ''}'.trim().toLowerCase() == 'admob';
 
-  static String _id(String panelKey, String ios) => Platform.isIOS ? ios : '${_cfg[panelKey] ?? ''}'.trim();
+  /// Ad unit IDs from the panel. On iPhone the panel's ios_* fields are used
+  /// (Google needs separate iOS IDs); until they're filled in, the test IDs
+  /// in AppConfig.
+  static String _id(String key, String iosFallback) {
+    String v(String k) => '${_cfg[k] ?? ''}'.trim();
+    if (!Platform.isIOS) return v(key);
+    final ios = v('ios_$key');
+    return ios.isNotEmpty ? ios : iosFallback;
+  }
+
   static String get _bannerId => _id('banner_ad_id', AppConfig.iosBannerAdId);
   static String get _interId => _id('interstital_ad_id', AppConfig.iosInterstitialAdId);
   static String get _rewardId => _id('reward_ad_id', AppConfig.iosRewardAdId);
