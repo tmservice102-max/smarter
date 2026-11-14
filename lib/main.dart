@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:media_kit/media_kit.dart';
 
 import 'config.dart';
+import 'session.dart';
 import 'store.dart';
 import 'pages/launcher_page.dart';
 import 'ui/kit.dart';
@@ -43,6 +44,12 @@ class IptvApp extends StatelessWidget {
           selectionColor: Color(0x55FFCA28),
           selectionHandleColor: C.primary,
         ),
+      ),
+      // The panel's right-to-left switch flips every screen, like Android.
+      builder: (context, child) => ValueListenableBuilder<bool>(
+        valueListenable: Session.rtl,
+        builder: (_, rtl, _) =>
+            Directionality(textDirection: rtl ? TextDirection.rtl : TextDirection.ltr, child: child!),
       ),
       home: const LauncherPage(),
     );

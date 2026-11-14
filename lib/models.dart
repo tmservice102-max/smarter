@@ -1,4 +1,5 @@
 // Data models shared across the app.
+import 'dart:io';
 
 String _s(dynamic v) => v == null ? '' : v.toString();
 bool _b(dynamic v) => v == true || v == 1 || v == '1' || v == 'true';
@@ -50,6 +51,16 @@ class AppDetails {
   bool get trial => flag('is_trial_xui');
   bool get download => flag('is_download');
   bool get radio => flag('is_xui_radio');
+  bool get streamRadio => flag('is_stream_radio');
+  bool get rtl => flag('is_rtl');
+  bool get localStorage => flag('is_local_storage');
+
+  /// Update popup (LauncherActivity). The iPhone app has its own switch,
+  /// version (like 1.0.1) and App Store link in the panel, so an Android
+  /// update never asks iPhone users to upgrade.
+  bool get updateOn => flag(Platform.isIOS ? 'ios_app_update_status' : 'app_update_status');
+  String get updateVersion => get(Platform.isIOS ? 'ios_app_new_version' : 'app_new_version');
+  String get updateUrl => get(Platform.isIOS ? 'ios_app_redirect_url' : 'app_redirect_url');
   int get theme => int.tryParse(get('is_theme')) ?? 0;
   int get epgTheme => int.tryParse(get('is_epg')) ?? 2;
   String get email => get('app_email');

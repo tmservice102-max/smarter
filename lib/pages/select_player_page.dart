@@ -1,4 +1,5 @@
 // Login type chooser (SelectPlayerActivity / activity_select_player.xml).
+import 'package:file_picker/file_picker.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../session.dart';
@@ -12,6 +13,7 @@ import 'sign_in_code_page.dart';
 import 'single_stream_page.dart';
 import 'users_list_page.dart';
 import 'downloads_page.dart';
+import 'player_vod_page.dart';
 
 class _Opt {
   final String title;
@@ -21,6 +23,16 @@ class _Opt {
   /// Shows the ">" arrow (Android ItemSelect isMore).
   final bool more;
   _Opt(this.title, this.icon, this.onTap, {this.more = false});
+}
+
+/// Local Storage (LocalStorageActivity): plays a video from the phone. On
+/// iPhone the system picker shows the Photos and Files videos.
+Future<void> _openLocal(BuildContext context) async {
+  final r = await FilePicker.pickFiles(type: FileType.video);
+  final f = r.isEmpty ? null : r.single;
+  final path = f?.path;
+  if (f == null || path == null || !context.mounted) return;
+  go(context, VodPlayerPage(title: f.name, url: path, rewardKey: 'reward_ad_on_local'));
 }
 
 class SelectPlayerPage extends StatelessWidget {
@@ -59,6 +71,9 @@ class SelectPlayerPage extends StatelessWidget {
       _Opt(S.list_users, 'ic_user_octagon', () => go(context, const UsersListPage(), replace: true), more: true),
     );
     list.add(_Opt(S.x_downloads, 'iv_downloading', () => go(context, const DownloadsPage()), more: true));
+    if (app?.localStorage == true) {
+      list.add(_Opt(S.x_local_storage, 'ic_hard_drive', () => _openLocal(context), more: true));
+    }
     for (final p in app?.selectPages ?? const <Map<String, String>>[]) {
       final type = (p['type'] ?? '').toLowerCase();
       final icon = type == 'whatsapp'

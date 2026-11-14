@@ -238,7 +238,8 @@ class _HomePageState extends State<HomePage> with HomeActions {
                   Ic('ic_wifi', size: 35.sdp, pad: 8.sdp),
                   IconTap('ic_round_notifications', onTap: () => go(context, const NotificationsPage())),
                   if (app?.download ?? true) IconTap('iv_downloading', onTap: () => go(context, const DownloadsPage())),
-                  if (app?.radio ?? false) IconTap('ic_radio', onTap: () => needLive(const RadioPage())),
+                  if ((a?.kind == 'stream' ? app?.streamRadio : app?.radio) ?? false)
+                    IconTap('ic_radio', onTap: () => needLive(const RadioPage())),
                   IconTap('ic_outline_person', pad: 7, onTap: () => go(context, const ProfilePage())),
                   IconTap('ic_people', pad: 6, onTap: () => signOut(context)),
                   IconTap(

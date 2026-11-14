@@ -1,9 +1,12 @@
 // Splash screen (LauncherActivity / activity_launcher.xml).
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+import 'dart:math';
 
 import 'package:material_ui/material_ui.dart';
 import 'package:media_kit/media_kit.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../api/panel_api.dart';
 import '../config.dart';
@@ -93,6 +96,28 @@ class _LauncherPageState extends State<LauncherPage> {
     }
     if (!mounted) return;
     setState(() => _loading = false);
+    final app = Session.app;
+    Session.rtl.value = app?.rtl ?? false;
+    // Update popup first, then maintenance, like LauncherActivity. Not
+    // forced: DO IT NOW opens the store link, Cancel or X goes on.
+    final outdated = app != null && app.updateOn && await _outdated(app.updateVersion);
+    if (!mounted) return;
+    if (outdated) {
+      while (true) {
+        if (!mounted) return;
+        final yes = await appDialog(
+          context,
+          icon: 'ic_error',
+          title: S.upgrade,
+          msg: S.its_time_to_upgrade,
+          yes: S.do_it_now,
+          no: S.cancel,
+        );
+        if (!yes) break;
+        if (app.updateUrl.isNotEmpty) await openExternal(app.updateUrl);
+      }
+      if (!mounted) return;
+    }
     if (Session.app?.maintenance == true) {
       await appDialog(
         context,
@@ -106,6 +131,25 @@ class _LauncherPageState extends State<LauncherPage> {
       return;
     }
     _next();
+  }
+
+  /// The installed app is older than the panel's version: on iPhone the
+  /// version (1.0.1), on Android the version code like the Android app.
+  Future<bool> _outdated(String want) async {
+    if (want.trim().isEmpty) return false;
+    final info = await PackageInfo.fromPlatform();
+    if (!Platform.isIOS) {
+      final w = int.tryParse(want.trim());
+      return w != null && w != int.tryParse(info.buildNumber);
+    }
+    List<int> parts(String v) =>
+        v.split(RegExp(r'[^0-9]+')).where((e) => e.isNotEmpty).map((e) => int.tryParse(e) ?? 0).toList();
+    final a = parts(info.version), b = parts(want);
+    for (var i = 0; i < max(a.length, b.length); i++) {
+      final x = i < a.length ? a[i] : 0, y = i < b.length ? b[i] : 0;
+      if (x != y) return x < y;
+    }
+    return false;
   }
 
   Future<void> _next() async {

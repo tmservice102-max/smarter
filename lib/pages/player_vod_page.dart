@@ -23,12 +23,20 @@ class VodPlayerPage extends StatefulWidget {
   final String seriesName;
   final String seriesIcon;
 
-  /// One video (movie, catch-up, single stream, download).
-  const VodPlayerPage({super.key, required this.title, required this.url, this.resumeKey = ''})
-    : episodes = const [],
-      start = 0,
-      seriesName = '',
-      seriesIcon = '';
+  /// The panel's rewarded-ad switch for this kind of video.
+  final String rewardKey;
+
+  /// One video (movie, catch-up, single stream, download, local file).
+  const VodPlayerPage({
+    super.key,
+    required this.title,
+    required this.url,
+    this.resumeKey = '',
+    this.rewardKey = 'reward_ad_on_movie',
+  }) : episodes = const [],
+       start = 0,
+       seriesName = '',
+       seriesIcon = '';
 
   /// Episodes of a season, starting at [start]; plays the next one when done.
   const VodPlayerPage.episodes({
@@ -37,7 +45,8 @@ class VodPlayerPage extends StatefulWidget {
     required this.episodes,
     required this.start,
     this.seriesIcon = '',
-  }) : title = seriesName,
+  }) : rewardKey = 'reward_ad_on_episodes',
+       title = seriesName,
        url = '',
        resumeKey = '';
 
@@ -56,7 +65,7 @@ class _VodPlayerPageState extends State<VodPlayerPage> {
   bool get _isEpisodes => widget.episodes.isNotEmpty;
 
   // ExoPlayerActivity.startTimer: one rewarded ad after N minutes.
-  late final _reward = RewardTimer(_isEpisodes ? 'reward_ad_on_episodes' : 'reward_ad_on_movie');
+  late final _reward = RewardTimer(widget.rewardKey);
 
   bool _controls = true;
   bool _locked = false;

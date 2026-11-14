@@ -94,7 +94,7 @@ class _SingleStreamPageState extends State<SingleStreamPage> {
                         final (n, u) = list[i];
                         final colors = G.users[i % G.users.length];
                         return Tap(
-                          onTap: () => go(context, VodPlayerPage(title: n, url: u)),
+                          onTap: () => go(context, VodPlayerPage(title: n, url: u, rewardKey: 'reward_ad_on_single')),
                           onLongPress: () async {
                             final ok = await appDialog(context, icon: 'ic_trash', title: S.delete, msg: S.sure_delete);
                             if (!ok) return;

@@ -39,6 +39,8 @@
 		<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 		<key>CFBundleInfoDictionaryVersion</key>
 		<string>6.0</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Choose a video from your library to play it in Local Storage.</string>
 		<key>CFBundleName</key>
 		<string>iptv_smarter</string>
 		<key>CFBundlePackageType</key>
