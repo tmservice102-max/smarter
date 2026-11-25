@@ -6,6 +6,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -32,13 +34,14 @@ class Ads {
       '${_cfg['ad_network'] ?? ''}'.trim().toLowerCase() == 'admob';
 
   /// Ad unit IDs from the panel. On iPhone the panel's ios_* fields are used
-  /// (Google needs separate iOS IDs); until they're filled in, the test IDs
-  /// in AppConfig.
+  /// (Google needs separate iOS IDs); until they're filled in, test builds use
+  /// the test IDs in AppConfig and App Store builds show no ads.
   static String _id(String key, String iosFallback) {
     String v(String k) => '${_cfg[k] ?? ''}'.trim();
     if (!Platform.isIOS) return v(key);
     final ios = v('ios_$key');
-    return ios.isNotEmpty ? ios : iosFallback;
+    if (ios.isNotEmpty) return ios;
+    return kReleaseMode ? '' : iosFallback;
   }
 
   static String get _bannerId => _id('banner_ad_id', AppConfig.iosBannerAdId);
@@ -69,11 +72,22 @@ class Ads {
     final c = _ready = Completer<bool>();
     () async {
       if (!on) return c.complete(false);
+      if (_bannerId.isEmpty && _interId.isEmpty && _rewardId.isEmpty) return c.complete(false);
       try {
         await _consent();
         // Like GDPRChecker.canLoadAd: only "required but not given" blocks ads.
         final st = await ConsentInformation.instance.getConsentStatus();
         if (st == ConsentStatus.required) return c.complete(false);
+        // iPhone: Apple's "Allow tracking?" prompt (App Tracking Transparency),
+        // asked once after the consent form. Ads still show if the user says no.
+        if (Platform.isIOS) {
+          try {
+            if (await AppTrackingTransparency.trackingAuthorizationStatus ==
+                TrackingStatus.notDetermined) {
+              await AppTrackingTransparency.requestTrackingAuthorization();
+            }
+          } catch (_) {}
+        }
         await MobileAds.instance.initialize();
         _ok = true;
         if (_interOn) _loadInter();
