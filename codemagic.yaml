@@ -111,12 +111,5 @@ workflows:
           xcrun simctl io "$UDID" screenshot video/last_frame.png || true
           ls -la video
           if [ "$TEST_FAILED" = "1" ]; then echo "Walkthrough test failed (video kept for debugging)"; fi
-      - name: Rotate to landscape
-        script: |
-          brew install ffmpeg >/dev/null 2>&1 || true
-          if command -v ffmpeg >/dev/null; then
-            ffmpeg -y -i video/raw.mp4 -vf "transpose=2" -c:v libx264 -pix_fmt yuv420p video/demo_landscape.mp4 || true
-          fi
-          ls -la video
     artifacts:
       - video/*
