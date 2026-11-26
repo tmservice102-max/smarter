@@ -37,6 +37,20 @@ void main() {
     await wait(t, 1.5);
   }
 
+  /// Taps [f] until [then] shows up (pages can ignore taps while they animate).
+  Future<void> tapUntil(WidgetTester t, Finder f, Finder then, {int tries = 8}) async {
+    for (var i = 0; i < tries; i++) {
+      await waitFor(t, f);
+      await wait(t, 1.5);
+      if (then.evaluate().isNotEmpty) return;
+      final hit = find.ancestor(of: f.first, matching: find.byType(GestureDetector));
+      await t.tap(hit.evaluate().isNotEmpty ? hit.first : f.first, warnIfMissed: false);
+      await wait(t, 3);
+      if (then.evaluate().isNotEmpty) return;
+    }
+    throw TestFailure('Tapping $f never opened $then');
+  }
+
   Future<void> back(WidgetTester t) async {
     final nav = t.state<NavigatorState>(find.byType(Navigator).first);
     nav.pop();
@@ -55,11 +69,8 @@ void main() {
     app.main();
     await wait(t, 4);
 
-    // Login type chooser.
-    await tap(t, find.text(S.login_with_xtream_codes));
-
-    // Sign in form: name, username, password, server URL.
-    await waitFor(t, find.byType(TextField));
+    // Login type chooser (tap again if the page was still animating in).
+    await tapUntil(t, find.text(S.login_with_xtream_codes), find.byType(TextField));
     await typeInto(t, 0, 'Demo');
     await typeInto(t, 1, 'test');
     await typeInto(t, 2, 'test');
