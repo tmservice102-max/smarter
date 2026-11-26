@@ -71,7 +71,7 @@ class Ads {
     if (_ready != null) return _ready!.future;
     final c = _ready = Completer<bool>();
     () async {
-      if (!on) return c.complete(false);
+      if (!on || const bool.fromEnvironment('NO_ADS')) return c.complete(false);
       if (_bannerId.isEmpty && _interId.isEmpty && _rewardId.isEmpty) return c.complete(false);
       try {
         await _consent();
