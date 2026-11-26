@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import '../config.dart';
 import '../models.dart';
 import '../store.dart';
+import 'demo_server.dart';
 import 'source.dart';
 
 String _s(dynamic v) => v == null ? '' : v.toString();
@@ -30,6 +31,7 @@ class XtreamSource implements ContentSource {
           .replace(queryParameters: {'username': account.username, 'password': account.password, ...extra});
 
   Future<Uint8List?> _bytes(Map<String, String> extra, {Duration? timeout}) async {
+    if (DemoServer.isDemo(account)) return DemoServer.respond(extra);
     final res = await http
         .get(_uri(extra), headers: {'User-Agent': 'IPTVSmartersPro'})
         .timeout(timeout ?? AppConfig.timeout);
@@ -242,6 +244,7 @@ class XtreamSource implements ContentSource {
 
   @override
   String streamUrl(StreamItem item) {
+    if (DemoServer.isDemo(account)) return DemoServer.streamUrl(item);
     final base = account.server;
     final u = account.username;
     final p = account.password;
@@ -260,6 +263,7 @@ class XtreamSource implements ContentSource {
 
   @override
   String episodeUrl(Episode ep) {
+    if (DemoServer.isDemo(account)) return DemoServer.episodeUrl(ep);
     final ext = ep.extension.isEmpty ? 'mp4' : ep.extension;
     return '${account.server}/series/${account.username}/${account.password}/${ep.id}.$ext';
   }

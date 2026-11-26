@@ -72,3 +72,44 @@ workflows:
       - flutter build ios --simulator --debug
     artifacts:
       - build/ios/iphonesimulator/*.app
+
+  ios-demo-video:
+    name: iPhone demo video (simulator recording for App Review)
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Get packages
+        script: flutter pub get
+      - name: Boot iPhone simulator
+        script: |
+          UDID=$(xcrun simctl list devices available -j | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin)['devices']
+          c=[x for k,v in d.items() if 'iOS' in k for x in v if x['name'].startswith('iPhone') and 'Pro' in x['name'] and 'Max' not in x['name']]
+          c=c or [x for k,v in d.items() if 'iOS' in k for x in v if x['name'].startswith('iPhone')]
+          print(c[-1]['udid'])")
+          echo "UDID=$UDID" >> $CM_ENV
+          xcrun simctl boot "$UDID" || true
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl status_bar "$UDID" override --time "9:41" --batteryState charged --batteryLevel 100 --wifiBars 3 || true
+          open -a Simulator || true
+          sleep 5
+      - name: Record walkthrough
+        script: |
+          mkdir -p video
+          xcrun simctl io "$UDID" recordVideo --codec=h264 --force video/raw.mp4 &
+          REC=$!
+          sleep 2
+          flutter test integration_test/demo_flow_test.dart -d "$UDID" --dart-define=NO_ADS=true || TEST_FAILED=1
+          sleep 2
+          kill -INT $REC || true
+          wait $REC || true
+          xcrun simctl io "$UDID" screenshot video/last_frame.png || true
+          ls -la video
+          if [ "$TEST_FAILED" = "1" ]; then echo "Walkthrough test failed (video kept for debugging)"; fi
+    artifacts:
+      - video/*
