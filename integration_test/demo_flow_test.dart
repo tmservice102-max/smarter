@@ -28,7 +28,9 @@ void main() {
       await t.pump(const Duration(milliseconds: 200));
       if (f.evaluate().isNotEmpty) return;
     }
-    throw TestFailure('Not found on screen: $f');
+    final texts = find.byType(Text).evaluate().map((e) => (e.widget as Text).data ?? '').where((x) => x.isNotEmpty).take(40).toList();
+    final fields = find.byType(EditableText).evaluate().length;
+    throw TestFailure('Not found on screen: $f\nScreen texts: $texts\nEditable fields: $fields');
   }
 
   Future<void> tap(WidgetTester t, Finder f) async {
