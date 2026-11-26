@@ -60,7 +60,7 @@ void main() {
   }
 
   Future<void> typeInto(WidgetTester t, int index, String text) async {
-    final f = find.byType(TextField).at(index);
+    final f = find.byType(EditableText).at(index);
     await t.tap(f, warnIfMissed: false);
     await wait(t, 0.4);
     await t.enterText(f, text);
@@ -72,7 +72,7 @@ void main() {
     await wait(t, 4);
 
     // Login type chooser (tap again if the page was still animating in).
-    await tapUntil(t, find.text(S.login_with_xtream_codes), find.byType(TextField));
+    await tapUntil(t, find.text(S.login_with_xtream_codes), find.byType(EditableText));
     await typeInto(t, 0, 'Demo');
     await typeInto(t, 1, 'test');
     await typeInto(t, 2, 'test');
