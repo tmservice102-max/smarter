@@ -20,7 +20,12 @@ class DemoServer {
     return h == host && a.username == user && a.password == pass;
   }
 
-  static const _gtv = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample';
+  // Wikimedia Commons copies of the Blender open movies (Creative Commons).
+  static const _wv = 'https://upload.wikimedia.org/wikipedia/commons/transcoded';
+  static const _wt = 'https://thumb.wikimedia.org/wikipedia/commons/thumb';
+  static const _bbbIcon = '$_wt/c/c0/Big_Buck_Bunny_4K.webm/500px-Big_Buck_Bunny_4K.webm.jpg';
+  static const _edIcon = '$_wt/a/a2/Elephants_Dream_%282006%29.webm/500px-Elephants_Dream_%282006%29.webm.jpg';
+  static const _sintelIcon = '$_wt/f/f1/Sintel_movie_4K.webm/500px-Sintel_movie_4K.webm.jpg';
 
   static const _live = [
     {
@@ -28,21 +33,21 @@ class DemoServer {
       'name': 'Demo Live 1 (Apple test stream)',
       'cat': '1',
       'url': 'https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_fmp4/master.m3u8',
-      'icon': '$_gtv/images/BigBuckBunny.jpg',
+      'icon': _bbbIcon,
     },
     {
       'id': '2',
       'name': 'Demo Live 2 (Akamai test stream)',
       'cat': '1',
       'url': 'https://cph-p2p-msl.akamaized.net/hls/live/2000341/test/master.m3u8',
-      'icon': '$_gtv/images/ElephantsDream.jpg',
+      'icon': _edIcon,
     },
     {
       'id': '3',
       'name': 'Demo Live 3 (Big Buck Bunny HLS)',
       'cat': '2',
       'url': 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
-      'icon': '$_gtv/images/BigBuckBunny.jpg',
+      'icon': _bbbIcon,
     },
   ];
 
@@ -50,7 +55,7 @@ class DemoServer {
     {
       'id': '101',
       'name': 'Big Buck Bunny',
-      'file': 'BigBuckBunny',
+      'file': 'c/c0/Big_Buck_Bunny_4K.webm',
       'year': '2008',
       'plot': 'A large rabbit deals with three bullying rodents. Blender Foundation open movie (CC BY 3.0).',
       'secs': 596,
@@ -58,7 +63,7 @@ class DemoServer {
     {
       'id': '102',
       'name': 'Elephants Dream',
-      'file': 'ElephantsDream',
+      'file': 'a/a2/Elephants_Dream_%282006%29.webm',
       'year': '2006',
       'plot': 'Two men explore a strange mechanical world. Blender Foundation open movie (CC BY 2.5).',
       'secs': 653,
@@ -66,7 +71,7 @@ class DemoServer {
     {
       'id': '103',
       'name': 'Sintel',
-      'file': 'Sintel',
+      'file': 'f/f1/Sintel_movie_4K.webm',
       'year': '2010',
       'plot': 'A girl searches for her lost baby dragon. Blender Foundation open movie (CC BY 3.0).',
       'secs': 888,
@@ -74,7 +79,7 @@ class DemoServer {
     {
       'id': '104',
       'name': 'Tears of Steel',
-      'file': 'TearsOfSteel',
+      'file': 'c/cb/Tears_of_Steel_1080p.webm',
       'year': '2012',
       'plot': 'Scientists try to save the world from robots. Blender Foundation open movie (CC BY 3.0).',
       'secs': 734,
@@ -84,7 +89,15 @@ class DemoServer {
   static Map<String, dynamic> _movie(String id) =>
       _movies.firstWhere((m) => m['id'] == id, orElse: () => _movies.first);
 
-  static String _cover(Map m) => '$_gtv/images/${m['file']}.jpg';
+  static String _cover(Map m) {
+    final f = m['file'] as String;
+    return '$_wt/$f/500px-${f.split('/').last}.jpg';
+  }
+
+  static String _video(Map m) {
+    final f = m['file'] as String;
+    return '$_wv/$f/${f.split('/').last}.480p.vp9.webm';
+  }
 
   /// Answer to a player_api.php request, as the real server would send it.
   static Uint8List respond(Map<String, String> params) {
@@ -142,7 +155,7 @@ class DemoServer {
               'name': m['name'],
               'stream_icon': _cover(m),
               'category_id': '10',
-              'container_extension': 'mp4',
+              'container_extension': 'webm',
               'rating': '7',
               'added': '$now',
             },
@@ -165,7 +178,7 @@ class DemoServer {
           {
             'series_id': '201',
             'name': 'Blender Open Movies',
-            'cover': '$_gtv/images/Sintel.jpg',
+            'cover': _sintelIcon,
             'category_id': '20',
             'rating': '7',
             'last_modified': '$now',
@@ -176,7 +189,7 @@ class DemoServer {
           'info': {
             'plot': 'Short open movies by the Blender Foundation, shared under Creative Commons licenses.',
             'genre': 'Animation',
-            'cover': '$_gtv/images/Sintel.jpg',
+            'cover': _sintelIcon,
             'rating': '7',
           },
           'episodes': {
@@ -187,7 +200,7 @@ class DemoServer {
                   'title': _movies[i]['name'],
                   'season': 1,
                   'episode_num': i + 1,
-                  'container_extension': 'mp4',
+                  'container_extension': 'webm',
                   'info': {'plot': _movies[i]['plot'], 'movie_image': _cover(_movies[i])},
                 },
             ],
@@ -208,11 +221,11 @@ class DemoServer {
       case ContentType.live:
         return _live.firstWhere((c) => c['id'] == item.id, orElse: () => _live.first)['url']!;
       case ContentType.movie:
-        return '$_gtv/${_movie(item.id)['file']}.mp4';
+        return _video(_movie(item.id));
       case ContentType.series:
         return '';
     }
   }
 
-  static String episodeUrl(Episode ep) => '$_gtv/${_movie(ep.id)['file']}.mp4';
+  static String episodeUrl(Episode ep) => _video(_movie(ep.id));
 }
